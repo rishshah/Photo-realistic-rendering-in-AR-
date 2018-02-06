@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>OpenGLWindow</class>
+ <widget class="QDialog" name="OpenGLWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>480</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="MyGLWidget" name="openGLWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>460</width>
+     <height>460</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="pan_radioButton">
+   <property name="geometry">
+    <rect>
+     <x>490</x>
+     <y>60</y>
+     <width>112</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>PAN</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="select_radioButton">
+   <property name="geometry">
+    <rect>
+     <x>490</x>
+     <y>90</y>
+     <width>112</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Select</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>490</x>
+     <y>390</y>
+     <width>89</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Fit</string>
+   </property>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MyGLWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>myglwidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
