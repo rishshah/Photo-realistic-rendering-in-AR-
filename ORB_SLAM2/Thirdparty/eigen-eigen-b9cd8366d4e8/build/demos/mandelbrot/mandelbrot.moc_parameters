@@ -1,0 +1,7 @@
+-I/home/rishshah/git/ORB_SLAM2/Thirdparty/eigen-eigen-b9cd8366d4e8
+-I/home/rishshah/git/ORB_SLAM2/Thirdparty/eigen-eigen-b9cd8366d4e8/build
+-I/usr/include/qt4
+-DNDEBUG
+-o
+/home/rishshah/git/ORB_SLAM2/Thirdparty/eigen-eigen-b9cd8366d4e8/build/demos/mandelbrot/mandelbrot.moc
+/home/rishshah/git/ORB_SLAM2/Thirdparty/eigen-eigen-b9cd8366d4e8/demos/mandelbrot/mandelbrot.h

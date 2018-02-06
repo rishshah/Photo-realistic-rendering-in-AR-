@@ -2,7 +2,7 @@
 
 ## Description
 Application which scans the natural environment around user , tracks various planes and features and creates a synthetic map of the environment. User can then provide 3D meshes to display in the scene and play with them.
-The photorealistic rendering part incudes 3D mesh rendering in global illumination accounting for various light sources in that natural environment.
+The photorealistic rendering part includes 3D mesh rendering in global illumination accounting for various light sources in that natural environment.
 
 ## Milestones
 
@@ -24,3 +24,38 @@ The photorealistic rendering part incudes 3D mesh rendering in global illuminati
 
 ## Status
 - ORB SLAM library output 3d points obtained
+- One Plane fitted to points in the space
+- Getting input -> either attached camera/ video file input
+- Processing file and displaying the progress window from ORBSLAM
+- Displaying processed points in may be 3 different views (Without superimposing it on the image)
+- Mouse selection tool for choosing a bunch of points
+- Fitting a plane to those points
+
+## Plan
+
+### GUI Application Interface Actions Remaining
+- Getting input meshes to place on the plane
+- Render it and superimpose on the video and playback
+
+
+#### Overview
+A GUI application for user to visualize augmented reality using script that builds ORBSLAM, processing the output for purpose of mounting a 3d surface on input 2d video for rendering synthetic meshes
+
+- ORB SLAM API 
+	- Work 		(C++ program, using api calls of ORBSLAM and getting output)
+	- Input		(Images in sequences)
+	- Output 	(3D Points of scene)
+
+- QT C++ GUI application that outputs planes from the given points (RANSAC and Regression)
+
+
+
+
+
+
+
+
+
+
+
+
