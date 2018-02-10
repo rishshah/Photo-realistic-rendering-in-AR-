@@ -31,12 +31,15 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - Mouse selection tool for choosing a bunch of points
 - Fitting a plane to those points
 
-## Plan
 - Display in changed data-structures
-- Select(Snap to plane) for removal
 - Multiple plane selection
 - Plane display nicely (bounded)
 - Input and render meshes
+
+## Plan
+- Select(Snap to plane) for removal
+- Load texture from png
+- Display texture and change data structures
 - Use keyframes to interpolate camera
 
 ### GUI Application Interface Actions Remaining

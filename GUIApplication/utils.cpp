@@ -85,3 +85,8 @@ QVector3D pointOnPlane(QVector3D point, QVector3D plane){
     float t = (1 - point.x() + point.y() + point.z())/plane.lengthSquared();
     return point + t*plane;
 }
+
+//void LoadTexture(texture_filename, 256, 256){
+
+//}
+//    tex = LoadTexture(texture_filename, 256, 256);

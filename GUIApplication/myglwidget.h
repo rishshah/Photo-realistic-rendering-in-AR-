@@ -27,6 +27,7 @@ public:
     void mouseMove(QMouseEvent *event, bool select_mode, bool add_mode);
     void add_plane();
     void remove_plane();
+    void input_mesh(std::string f);
 
 public slots:
     void setXRotation(int angle);
@@ -47,6 +48,7 @@ protected:
 private:
     void read_points();
     void draw_scene();
+    void draw_mesh();
 
     int m_xRot;
     int m_yRot;
@@ -56,10 +58,10 @@ private:
     QPoint m_lastPos;
 
     QOpenGLVertexArrayObject m_vao;
-    QOpenGLBuffer m_vbo;
+    QOpenGLBuffer m_scene_vbo, m_mesh_vbo, m_bg_vbo;
 
     QVector<Plane> m_planes;
-    QVector<Point> m_points;
+    QVector<Point> m_scene_points, m_mesh_points, m_bg_points;
 
     QOpenGLShaderProgram *m_program;
 

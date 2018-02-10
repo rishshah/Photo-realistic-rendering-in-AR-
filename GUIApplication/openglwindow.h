@@ -22,6 +22,8 @@ protected:
 private slots:
     void on_pushButton_confirm_clicked();
 
+    void on_pushButton_clicked();
+
 private:
     Ui::OpenGLWindow *ui;
 };

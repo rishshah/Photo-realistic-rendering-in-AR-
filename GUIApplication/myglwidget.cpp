@@ -60,7 +60,7 @@ void MyGLWidget::setZRotation(int angle){
 
 void MyGLWidget::cleanup(){
     makeCurrent();
-    m_vbo.destroy();
+    m_scene_vbo.destroy();
     delete m_program;
     m_program = 0;
     doneCurrent();
@@ -133,10 +133,10 @@ void MyGLWidget::initializeGL()
 
 
     // Fill vbo in points obtained
-    m_vbo.create();
-    m_vbo.bind();
-    glBufferData (GL_ARRAY_BUFFER, m_points.size() * sizeof(Point), &m_points[0], GL_STATIC_DRAW);
-    m_vbo.release();
+    m_scene_vbo.create();
+    m_scene_vbo.bind();
+    glBufferData (GL_ARRAY_BUFFER, m_scene_points.size() * sizeof(Point), &m_scene_points[0], GL_STATIC_DRAW);
+    m_scene_vbo.release();
 
     m_vao.release();
     m_program->release();
@@ -158,11 +158,16 @@ void MyGLWidget::paintGL()
 
     m_vao.bind();
 
-    if(m_mode == 1){
+    if(m_mode > 0){
         for(int i=0;i < m_planes.size(); i++){
             m_planes[i].draw(m_program, m_vPosition, m_vColor);
         }
     }
+
+    if(m_mode > 1){
+        draw_mesh();
+    }
+
     draw_scene();
     m_vao.release();
     m_program->release();
@@ -174,9 +179,9 @@ void MyGLWidget::resizeGL(int w, int h)
     m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
 }
 
-void MyGLWidget::draw_scene(){
-    m_vbo.bind();
-    glBufferData (GL_ARRAY_BUFFER, m_points.size() * sizeof(Point), &m_points[0], GL_STATIC_DRAW);
+void MyGLWidget::draw_mesh(){
+    m_mesh_vbo.bind();
+    glBufferData (GL_ARRAY_BUFFER, m_mesh_points.size() * sizeof(Point), &m_mesh_points[0], GL_STATIC_DRAW);
 
     glVertexAttribPointer(m_vPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(0) );
     m_program->enableAttributeArray(m_vPosition);
@@ -184,9 +189,39 @@ void MyGLWidget::draw_scene(){
     glVertexAttribPointer(m_vColor, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(sizeof(QVector3D)));
     m_program->enableAttributeArray(m_vColor);
 
-    glDrawArrays(GL_POINTS, 0, m_points.size());
+    glDrawArrays(GL_TRIANGLES, 0, m_mesh_points.size());
 
-    m_vbo.release();
+    m_mesh_vbo.release();
+}
+
+void MyGLWidget::draw_background(){
+    m_bg_vbo.bind();
+    glBufferData (GL_ARRAY_BUFFER, m_bg_points.size() * sizeof(Point), &m_bg_points[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(m_vPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(0) );
+    m_program->enableAttributeArray(m_vPosition);
+
+    glVertexAttribPointer(m_vColor, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(sizeof(QVector3D)));
+    m_program->enableAttributeArray(m_vColor);
+
+    glDrawArrays(GL_TRIANGLES, 0, m_bg_points.size());
+
+    m_bg_vbo.release();
+}
+
+void MyGLWidget::draw_scene(){
+    m_scene_vbo.bind();
+    glBufferData (GL_ARRAY_BUFFER, m_scene_points.size() * sizeof(Point), &m_scene_points[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(m_vPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(0) );
+    m_program->enableAttributeArray(m_vPosition);
+
+    glVertexAttribPointer(m_vColor, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(sizeof(QVector3D)));
+    m_program->enableAttributeArray(m_vColor);
+
+    glDrawArrays(GL_POINTS, 0, m_scene_points.size());
+
+    m_scene_vbo.release();
 }
 
 void MyGLWidget::read_points() {
@@ -194,13 +229,36 @@ void MyGLWidget::read_points() {
     if (fp_input ==  NULL) {
          QMessageBox::critical(this,"Error",SLAM_POINTS_FILEPATH " corrupt");
     } else {
-        m_points.clear();
+        m_scene_points.clear();
         float x, y, z;
         while(fscanf (fp_input, "%f %f %f", &x, &y, &z) != EOF){
-            m_points.append(Point(QVector3D(x,y,z),QVector3D(1,1,1)));
+            m_scene_points.append(Point(QVector3D(x,y,z),QVector3D(1,1,1)));
         }
         fclose(fp_input);
     }
+}
+
+void MyGLWidget::input_mesh(std::string fileName){
+    FILE *fp_input = fopen(fileName.c_str(), "r" );
+    if (fp_input ==  NULL) {
+         QMessageBox::critical(this,"Error","file corrupt");
+         return;
+    } else {
+        m_mesh_points.clear();
+        float x, y, z, c1, c2, c3;
+        while(fscanf (fp_input, "%f %f %f %f %f %f", &x, &y, &z, &c1, &c2, &c3) != EOF){
+            m_mesh_points.append(Point(QVector3D(x,y,z),QVector3D(c1,c2,c3)));
+        }
+        fclose(fp_input);
+    }
+
+    m_mode ++;
+
+    m_mesh_vbo.create();
+    m_mesh_vbo.bind();
+    glBufferData (GL_ARRAY_BUFFER, m_mesh_points.size() * sizeof(Point), &m_mesh_points[0], GL_STATIC_DRAW);
+    m_mesh_vbo.release();
+
 }
 
 void MyGLWidget::mousePress(QMouseEvent *event){
@@ -223,11 +281,11 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode, bool add_mode){
     } else {
         if(add_mode){ // Show selected points
             QVector3D corner1 = QVector3D(m_lastPos.x(), m_lastPos.y(), 0);
-            for(int i=0; i<m_points.size(); i++){
-                if (between_corners(m_proj * m_camera * m_world, m_points[i].position, corner1, QVector3D(event->x(), event->y(), 0))){
-                    m_points[i].color = QVector3D(1,0,0);
+            for(int i=0; i<m_scene_points.size(); i++){
+                if (between_corners(m_proj * m_camera * m_world, m_scene_points[i].position, corner1, QVector3D(event->x(), event->y(), 0))){
+                    m_scene_points[i].color = QVector3D(1,0,0);
                 } else {
-                    m_points[i].color = QVector3D(1,1,1);
+                    m_scene_points[i].color = QVector3D(1,1,1);
                 }
             }
         } else { // Show selected plane
@@ -239,9 +297,9 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode, bool add_mode){
 
 void MyGLWidget::add_plane(){
     QVector<QVector3D> selected_points;
-    for(int i=0; i<m_points.size(); i++){
-        if(m_points[i].color.y() != 1){
-            selected_points.append(m_points[i].position);
+    for(int i=0; i<m_scene_points.size(); i++){
+        if(m_scene_points[i].color.y() != 1){
+            selected_points.append(m_scene_points[i].position);
         }
     }
     printf("S : %d\n", selected_points.size());
