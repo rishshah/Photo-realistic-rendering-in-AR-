@@ -3,17 +3,11 @@
 #include <QMouseEvent>
 #include <qt5/QtOpenGL/QGLShaderProgram>
 #include <QCoreApplication>
-#include <math.h>
 #include <QMessageBox>
-#include <stdio.h>
-#include <Eigen/Dense>
-#include <cmath>
 
 MyGLWidget::MyGLWidget(QWidget *parent)
     : QOpenGLWidget(parent),
-      m_xRot(0),
-      m_yRot(0),
-      m_zRot(0),
+      m_xRot(0),m_yRot(0),m_zRot(0),
       m_mode(0),
       m_program(0){
 }
@@ -66,27 +60,27 @@ void MyGLWidget::setZRotation(int angle){
 
 void MyGLWidget::cleanup(){
     makeCurrent();
-    m_vbo_pos.destroy();
+    m_vbo.destroy();
     delete m_program;
     m_program = 0;
     doneCurrent();
 }
 
 static const char *vertexShaderSource =
-    "#version 130\n"
+    "#version 330\n"
     "in vec3 vPosition;\n"
-    "in vec4 vColor;\n"
+    "in vec3 vColor;\n"
     "out vec4 color;\n"
     "uniform mat4 uModelViewMatrix;\n"
 
     "void main (void)\n"
     "{\n"
     "   gl_Position = uModelViewMatrix * vec4(vPosition, 1.0f);\n"
-    "   color = vColor;\n"
+    "   color = vec4(vColor,1.0f);\n"
     "}";
 
 static const char *fragmentShaderSource =
-    "#version 130\n"
+    "#version 330\n"
 
     "in vec4 color;\n"
     "out vec4 frag_color;\n"
@@ -116,6 +110,14 @@ void MyGLWidget::initializeGL()
     m_program->link();
 
     m_program->bind();
+
+    // Location of variables in shader files
+    m_vColor = m_program->attributeLocation("vColor");
+    m_program->enableAttributeArray(m_vColor);
+
+    m_vPosition = m_program->attributeLocation("vPosition");
+    m_program->enableAttributeArray(m_vPosition);
+
     m_mvMatrixLoc = m_program->uniformLocation("uModelViewMatrix");
 
 
@@ -129,103 +131,15 @@ void MyGLWidget::initializeGL()
     m_vao.create();
     m_vao.bind();
 
-    m_vbo_pos.create();
-    setUpPositionBuffer();
 
-    m_vbo_col.create();
-    setUpColorBuffer();
-
-    m_vbo_grid_col.create();
-    m_vbo_grid_pos.create();
-    setUpGridBuffer();
+    // Fill vbo in points obtained
+    m_vbo.create();
+    m_vbo.bind();
+    glBufferData (GL_ARRAY_BUFFER, m_points.size() * sizeof(Point), &m_points[0], GL_STATIC_DRAW);
+    m_vbo.release();
 
     m_vao.release();
     m_program->release();
-}
-
-void MyGLWidget::setUpColorBuffer(){
-    m_vbo_col.bind();
-
-    m_vbo_col.allocate(m_points_col.constData(), m_points_col.size() * sizeof(QVector3D));
-
-    m_program->enableAttributeArray("vColor");
-    m_program->setAttributeBuffer("vColor", GL_FLOAT, 0, 3);
-
-    m_vbo_col.release();
-}
-
-void MyGLWidget::setUpGridBuffer(){
-    m_vbo_grid_col.bind();
-    m_vbo_grid_col.allocate(m_grid_col.constData(), m_grid_col.size() * sizeof(QVector3D));
-    m_program->enableAttributeArray("vColor");
-    m_program->setAttributeBuffer("vColor", GL_FLOAT, 0, 3);
-    m_vbo_grid_col.release();
-
-    m_vbo_grid_pos.bind();
-    m_vbo_grid_pos.allocate(m_grid_pos.constData(), m_grid_pos.size() * sizeof(QVector3D));
-    m_program->enableAttributeArray("vPosition");
-    m_program->setAttributeBuffer("vPosition", GL_FLOAT, 0, 3);
-    m_vbo_grid_pos.release();
-}
-
-void MyGLWidget::setUpPositionBuffer(){
-    m_vbo_pos.bind();
-
-    m_vbo_pos.allocate(m_points_pos.constData(), m_points_pos.size() * sizeof(QVector3D));
-
-    m_program->enableAttributeArray("vPosition");
-    m_program->setAttributeBuffer("vPosition", GL_FLOAT, 0, 3);
-
-    m_vbo_pos.release();
-}
-
-void MyGLWidget::read_points() {
-    FILE *fp_input = fopen(SLAM_POINTS_FILEPATH, "r" );
-    if (fp_input ==  NULL) {
-         QMessageBox::critical(this,"Error",SLAM_POINTS_FILEPATH " corrupt");
-    } else {
-        m_points_pos.clear();
-        m_points_col.clear();
-        float x, y, z;
-        while(fscanf (fp_input, "%f %f %f", &x, &y, &z) != EOF){
-            m_points_pos.append(QVector3D(x,y,z));
-            m_points_col.append(QVector3D(1,1,1));
-        }
-        fclose(fp_input);
-    }
-}
-
-bool MyGLWidget::between_corners(QVector3D point, QVector3D c1, QVector3D c2){
-    QMatrix4x4 curr_transform = m_proj * m_camera * m_world;
-    QVector4D tp = curr_transform * QVector4D(point, 1.0f);
-    QVector3D point3D = QVector3D(tp.x()/tp.z(), tp.y()/tp.z(), tp.y()/tp.z());
-    c1 = QVector2D(((c1.x()-START_X) - SIZE_X/2.0)/(SIZE_X/2.0), -((c1.y()-START_Y) - SIZE_Y/2.0)/(SIZE_Y/2.0));
-    c2 = QVector2D(((c2.x()-START_X) - SIZE_X/2.0)/(SIZE_X/2.0), -((c2.y()-START_Y) - SIZE_Y/2.0)/(SIZE_Y/2.0));
-
-    if(c1.x() <= c2.x() and c1.y() <= c2.y()){ // c1 TL : c2 BR
-        return (c1.x() <= point3D.x() and
-                point3D.x() <= c2.x() and
-                c1.y() <= point3D.y() and
-                point3D.y() <= c2.y());
-
-    } else if(c1.x() <= c2.x() and c1.y() >= c2.y()){ // c1 BL : c2 TR
-        return (c1.x() <= point3D.x() and
-                point3D.x() <= c2.x() and
-                c2.y() <= point3D.y() and
-                point3D.y() <= c1.y());
-
-    } else if(c1.x() >= c2.x() and c1.y() <= c2.y()){ // c1 TR : c2 BL
-        return (c2.x() <= point3D.x() and
-                point3D.x() <= c1.x() and
-                c1.y() <= point3D.y() and
-                point3D.y() <= c2.y());
-
-    } else { // c1 BR : c2 TL
-        return (c2.x() <= point3D.x() and
-                point3D.x() <= c1.x() and
-                c2.y() <= point3D.y() and
-                point3D.y() <= c1.y());
-    }
 }
 
 void MyGLWidget::paintGL()
@@ -240,18 +154,16 @@ void MyGLWidget::paintGL()
     m_world.rotate(m_zRot / 16.0f, 0, 0, 1);
 
     m_program->bind();
-    m_vao.bind();
     m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_camera * m_world);
 
+    m_vao.bind();
+
     if(m_mode == 1){
-        setUpGridBuffer();
-        glDrawArrays(GL_QUAD_STRIP , 0, m_grid_pos.size());
+        for(int i=0;i < m_planes.size(); i++){
+            m_planes[i].draw(m_program, m_vPosition, m_vColor);
+        }
     }
-
-    setUpColorBuffer();
-    setUpPositionBuffer();
-    glDrawArrays(GL_POINTS, 0, m_points_pos.size());
-
+    draw_scene();
     m_vao.release();
     m_program->release();
 }
@@ -262,131 +174,74 @@ void MyGLWidget::resizeGL(int w, int h)
     m_proj.perspective(45.0f, GLfloat(w) / h, 0.01f, 100.0f);
 }
 
-void MyGLWidget::pan_mousePressEvent(QMouseEvent *event){
-    m_lastPos = event->pos();
+void MyGLWidget::draw_scene(){
+    m_vbo.bind();
+    glBufferData (GL_ARRAY_BUFFER, m_points.size() * sizeof(Point), &m_points[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(m_vPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(0) );
+    m_program->enableAttributeArray(m_vPosition);
+
+    glVertexAttribPointer(m_vColor, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(sizeof(QVector3D)));
+    m_program->enableAttributeArray(m_vColor);
+
+    glDrawArrays(GL_POINTS, 0, m_points.size());
+
+    m_vbo.release();
 }
 
-void MyGLWidget::pan_mouseMoveEvent(QMouseEvent *event){
-    int dx = event->x() - m_lastPos.x();
-    int dy = event->y() - m_lastPos.y();
-
-    if (event->buttons() & Qt::LeftButton) {
-        setXRotation(m_xRot + 8 * dy);
-        setYRotation(m_yRot + 8 * dx);
-    } else if (event->buttons() & Qt::RightButton) {
-        setXRotation(m_xRot + 8 * dy);
-        setZRotation(m_zRot + 8 * dx);
+void MyGLWidget::read_points() {
+    FILE *fp_input = fopen(SLAM_POINTS_FILEPATH, "r" );
+    if (fp_input ==  NULL) {
+         QMessageBox::critical(this,"Error",SLAM_POINTS_FILEPATH " corrupt");
+    } else {
+        m_points.clear();
+        float x, y, z;
+        while(fscanf (fp_input, "%f %f %f", &x, &y, &z) != EOF){
+            m_points.append(Point(QVector3D(x,y,z),QVector3D(1,1,1)));
+        }
+        fclose(fp_input);
     }
+}
+
+void MyGLWidget::mousePress(QMouseEvent *event){
     m_lastPos = event->pos();
 }
 
-void MyGLWidget::select_mousePressEvent(QMouseEvent *event){
-    m_lastPos = event->pos();
-}
+void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode, bool add_mode){
+    if (!select_mode){ // PAN mode : changing rotation about origin
+        int dx = event->x() - m_lastPos.x();
+        int dy = event->y() - m_lastPos.y();
 
-void MyGLWidget::select_mouseMoveEvent(QMouseEvent *event){
-    QVector3D corner1 = QVector3D(m_lastPos.x(), m_lastPos.y(), 0);
-    for(int i=0; i<m_points_pos.size(); i++){
-        if (between_corners(m_points_pos[i], corner1, QVector3D(event->x(), event->y(), 0))){
-            m_points_col[i] = QVector3D(1,0,0);
-        } else {
-            m_points_col[i] = QVector3D(1,1,1);
+        if (event->buttons() & Qt::LeftButton) {
+            setXRotation(m_xRot + 8 * dy);
+            setYRotation(m_yRot + 8 * dx);
+        } else if (event->buttons() & Qt::RightButton) {
+            setXRotation(m_xRot + 8 * dy);
+            setZRotation(m_zRot + 8 * dx);
+        }
+        m_lastPos = event->pos();
+    } else {
+        if(add_mode){ // Show selected points
+            QVector3D corner1 = QVector3D(m_lastPos.x(), m_lastPos.y(), 0);
+            for(int i=0; i<m_points.size(); i++){
+                if (between_corners(m_proj * m_camera * m_world, m_points[i].position, corner1, QVector3D(event->x(), event->y(), 0))){
+                    m_points[i].color = QVector3D(1,0,0);
+                } else {
+                    m_points[i].color = QVector3D(1,1,1);
+                }
+            }
+        } else { // Show selected plane
+
         }
     }
     update();
 }
 
-void get3Points(int n,int&x,int&y,int&z){
-    x=rand()%n;
-    do{
-        y=rand()%n;
-    }
-    while (y==x);
-
-    do{
-        z=rand()%n;
-    }
-    while(z==x ||z==y);
-}
-
-double dist2plane(QVector3D point, QVector3D plane){
-    double num = abs(plane.x()*point.x() + plane.y()*point.y() + plane.z()*point.z() - 1);
-    double den = sqrt(plane.x()*plane.x() + plane.y()*plane.y() + plane.z()*plane.z());
-    return num/den;
-}
-
-void fit_plane(QVector<QVector3D> points, QVector3D& maybe_model, double& error){
-    int num_points = points.size();
-
-    typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> MatrixCustom;
-    MatrixCustom A(num_points, 3), B(num_points, 1);
-
-    for (int i = 0; i < num_points; ++i){
-        A(i,0) = points[i].x();
-        A(i,1) = points[i].y();
-        A(i,2) = points[i].z();
-        B(i,0) = 1;
-    }
-    MatrixCustom X = (A.transpose() * A).inverse() * A.transpose() * B;
-    maybe_model = QVector3D(X(0,0), X(1,0), X(2,0));
-
-    MatrixCustom E = B - A * X;
-    error = 0;
-    for (int i=0; i<num_points; i++){
-        error += E(i,0) * E(i,0);
-    }
-}
-
-bool close_enough(QVector3D point, QVector3D plane, double error_limit){
-    return dist2plane(point, plane) < error_limit;
-}
-
-bool good_enough(QVector<QVector3D> points, int good_num_points){
-    return points.size() > good_num_points;
-}
-
-void MyGLWidget::draw_plane(QVector3D plane, QVector<QVector3D> points){
-    m_grid_pos.clear();
-    m_grid_col.clear();
-
-    float tl_x = 10000, tl_y = 10000;
-    float br_x = -10000, br_y = -10000;
-    for(int i=0; i<points.size(); i++){
-        if(points[i].x() <= tl_x and points[i].y() <= tl_y){
-            tl_x = points[i].x();
-            tl_y = points[i].y();
-        }
-        if(points[i].x() >= br_x and points[i].y() >= br_y){
-            br_x = points[i].x();
-            br_y = points[i].y();
-        }
-
-    }
-/*
-        min_t = std::min(std::min(min_t, points[i].x()), points[i].y());
-        max_t = std::max(std::min(max_t, points[i].x()), points[i].y());
-*/
-    for(float i=tl_x;i<br_x;i+=(br_x - tl_x)/10.0){
-        for(float j=tl_y;j<br_y;j+=(br_y - tl_y)/10.0){
-            m_grid_pos.append(QVector3D(i,j,(1 - plane.x()*i - plane.y()*j)/plane.z()));
-            m_grid_col.append(QVector3D(0,0,1));
-        }
-    }
-
-//    for(int i=0;i<points.size();i++){
-//        m_grid_pos.append(points[i]);
-//        m_grid_col.append(QVector3D(0,0,1));
-//    }
-
-    m_mode = 1;
-    update();
-}
-
-void MyGLWidget::best_plane(){
+void MyGLWidget::add_plane(){
     QVector<QVector3D> selected_points;
-    for(int i=0; i<m_points_pos.size(); i++){
-        if(m_points_col[i].y() != 1){
-            selected_points.append(m_points_pos[i]);
+    for(int i=0; i<m_points.size(); i++){
+        if(m_points[i].color.y() != 1){
+            selected_points.append(m_points[i].position);
         }
     }
     printf("S : %d\n", selected_points.size());
@@ -408,7 +263,7 @@ void MyGLWidget::best_plane(){
         QVector3D maybe_model;
         double this_error;
         fit_plane(consensus_set, maybe_model, this_error);
-        printf("IP %f\n", this_error);
+//        printf("IP %f\n", this_error);
 
         for(int i=0; i< selected_points.size(); i++){
             if (i != x and i != y and i != z and close_enough(selected_points[i], maybe_model, error_limit)){
@@ -418,7 +273,7 @@ void MyGLWidget::best_plane(){
 
         if (good_enough(consensus_set, good_num_points)){
             fit_plane(consensus_set, maybe_model, this_error);
-            printf("T %d %d %f\n", iterations, consensus_set.size(), this_error);
+//            printf("T %d %d %f\n", iterations, consensus_set.size(), this_error);
             if (this_error < best_error){
                 best_model = maybe_model;
                 best_consensus_set = consensus_set;
@@ -426,9 +281,18 @@ void MyGLWidget::best_plane(){
             }
         }
         iterations++;
-        printf("F %d %d %f\n", iterations, best_consensus_set.size(), best_error);
+//        printf("F %d %d %f\n", iterations, best_consensus_set.size(), best_error);
     }
     printf("PLANE %f %f %f\n", best_model.x(), best_model.y(), best_model.z());
-    draw_plane(best_model, best_consensus_set);
+
+    m_vao.bind();
+    m_planes.append(Plane(best_model, best_consensus_set));
+    m_vao.release();
+    m_mode = 1;
+    update();
+
 }
 
+void MyGLWidget::remove_plane(){
+
+}

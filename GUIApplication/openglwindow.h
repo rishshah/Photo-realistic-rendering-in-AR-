@@ -20,7 +20,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
     void mouseMoveEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 private slots:
-    void on_pushButton_clicked();
+    void on_pushButton_confirm_clicked();
 
 private:
     Ui::OpenGLWindow *ui;

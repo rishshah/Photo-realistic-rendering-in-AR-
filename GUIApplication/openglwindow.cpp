@@ -7,6 +7,7 @@ OpenGLWindow::OpenGLWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->pan_radioButton->setChecked(true);
+    ui->radioButton_add->setChecked(true);
 }
 
 OpenGLWindow::~OpenGLWindow()
@@ -15,21 +16,23 @@ OpenGLWindow::~OpenGLWindow()
 }
 
 void OpenGLWindow::mousePressEvent(QMouseEvent *event){
-    if(ui->select_radioButton->isChecked()){
-        ui->openGLWidget->select_mousePressEvent(event);
-    } else{
-        ui->openGLWidget->pan_mousePressEvent(event);
-    }
+//    bool select_mode = ui->select_radioButton->isChecked();
+//    bool add_mode = ui->radioButton_add->isChecked();
+    ui->openGLWidget->mousePress(event);
 }
 
 void OpenGLWindow::mouseMoveEvent(QMouseEvent *event){
-    if(ui->select_radioButton->isChecked()){
-        ui->openGLWidget->select_mouseMoveEvent(event);
-    } else{
-        ui->openGLWidget->pan_mouseMoveEvent(event);
-    }
+    bool select_mode = ui->select_radioButton->isChecked();
+    bool add_mode = ui->radioButton_add->isChecked();
+    ui->openGLWidget->mouseMove(event, select_mode, add_mode);
 }
 
-void OpenGLWindow::on_pushButton_clicked(){
-    ui->openGLWidget->best_plane();
+
+void OpenGLWindow::on_pushButton_confirm_clicked()
+{
+    if(ui->radioButton_add->isChecked()){
+        ui->openGLWidget->add_plane();
+    } else {
+        ui->openGLWidget->remove_plane();
+    }
 }

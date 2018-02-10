@@ -16,13 +16,18 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     imagemode.cpp \
     myglwidget.cpp \
-    openglwindow.cpp
+    openglwindow.cpp \
+    utils.cpp \
+    plane.cpp \
+    point.cpp
 
 HEADERS  += mainwindow.h \
     imagemode.h \
     utils.h \
     myglwidget.h \
-    openglwindow.h
+    openglwindow.h \
+    plane.h \
+    point.h
 
 INCLUDEPATH += "/home/rishshah/Downloads/Sem6/Study_Material/RnD/Photo-realistic-rendering-in-AR-/ORB_SLAM2/Thirdparty/eigen-eigen-b9cd8366d4e8"
 

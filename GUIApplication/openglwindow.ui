@@ -23,44 +23,70 @@
     </rect>
    </property>
   </widget>
-  <widget class="QRadioButton" name="pan_radioButton">
+  <widget class="QPushButton" name="pushButton_confirm">
    <property name="geometry">
     <rect>
      <x>490</x>
-     <y>60</y>
-     <width>112</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>PAN</string>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="select_radioButton">
-   <property name="geometry">
-    <rect>
-     <x>490</x>
-     <y>90</y>
-     <width>112</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Select</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton">
-   <property name="geometry">
-    <rect>
-     <x>490</x>
-     <y>390</y>
+     <y>330</y>
      <width>89</width>
      <height>25</height>
     </rect>
    </property>
    <property name="text">
-    <string>Fit</string>
+    <string>Confirm</string>
    </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>490</x>
+     <y>160</y>
+     <width>83</width>
+     <height>54</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QRadioButton" name="radioButton_add">
+      <property name="text">
+       <string>Add</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QRadioButton" name="radioButton_remove">
+      <property name="text">
+       <string>Remove</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>490</x>
+     <y>60</y>
+     <width>69</width>
+     <height>54</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QRadioButton" name="pan_radioButton">
+      <property name="text">
+       <string>PAN</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QRadioButton" name="select_radioButton">
+      <property name="text">
+       <string>Select</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <customwidgets>

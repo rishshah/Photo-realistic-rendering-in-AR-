@@ -32,6 +32,12 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - Fitting a plane to those points
 
 ## Plan
+- Display in changed data-structures
+- Select(Snap to plane) for removal
+- Multiple plane selection
+- Plane display nicely (bounded)
+- Input and render meshes
+- Use keyframes to interpolate camera
 
 ### GUI Application Interface Actions Remaining
 - Getting input meshes to place on the plane

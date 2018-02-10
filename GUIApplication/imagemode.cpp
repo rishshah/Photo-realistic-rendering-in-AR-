@@ -38,27 +38,27 @@ void ImageMode::on_image_csv_button_clicked()
 
 void ImageMode::on_run_pushButton_clicked()
 {
-    std::string imageDirectory = ui->image_dir_label->text().toUtf8().constData();
-    std::string imageCSV = ui->image_csv_label->text().toUtf8().constData();
+//    std::string imageDirectory = ui->image_dir_label->text().toUtf8().constData();
+//    std::string imageCSV = ui->image_csv_label->text().toUtf8().constData();
 
-    if (imageDirectory == "-" or imageCSV == "-"){
-        QMessageBox::critical(this,"Error","Choose both files before run");
-        return;
-    }
-    putenv("LD_LIBRARY_PATH=" LD_LIBRARY_PATH);
-    chdir(BASE_DIR);
-    std::string s= "./test " VOCABULARY " " CAM_SETTING;
-    s += " ";
-    s += imageDirectory;
-    s += " ";
-    s += imageCSV;
-    int res = std::system(s.c_str());
-    if(res == 0){
+//    if (imageDirectory == "-" or imageCSV == "-"){
+//        QMessageBox::critical(this,"Error","Choose both files before run");
+//        return;
+//    }
+//    putenv("LD_LIBRARY_PATH=" LD_LIBRARY_PATH);
+//    chdir(BASE_DIR);
+//    std::string s= "./test " VOCABULARY " " CAM_SETTING;
+//    s += " ";
+//    s += imageDirectory;
+//    s += " ";
+//    s += imageCSV;
+//    int res = std::system(s.c_str());
+//    if(res == 0){
         hide();
         OpenGLWindow o(this);
         o.setModal(true);
         o.exec();
-    } else {
-        QMessageBox::critical(this,"Error","One or more of files chosen incorrect");
-    }
+//    } else {
+//        QMessageBox::critical(this,"Error","One or more of files chosen incorrect");
+//    }
 }

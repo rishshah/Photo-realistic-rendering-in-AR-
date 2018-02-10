@@ -19,4 +19,31 @@
 #define SIZE_X 460
 #define SIZE_Y 460
 
+#include <QtOpenGL/QGLFunctions>
+#include <QtWidgets/QOpenGLWidget>
+#include <QtGui/QOpenGLVertexArrayObject>
+#include <QtGui/QOpenGLBuffer>
+#include <QtGui/QOpenGLShaderProgram>
+
+#define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
+
+#include <stdio.h>
+#include <Eigen/Dense>
+#include <cmath>
+#include <QVector3D>
+#include <QVector>
+
+void get3Points(int n,int&x,int&y,int&z);
+
+double dist2plane(QVector3D point, QVector3D plane);
+
+void fit_plane(QVector<QVector3D> points, QVector3D& maybe_model, double& error);
+
+bool close_enough(QVector3D point, QVector3D plane, double error_limit);
+
+bool good_enough(QVector<QVector3D> points, int good_num_points);
+
+bool between_corners(QMatrix4x4 transform, QVector3D point, QVector3D c1, QVector3D c2);
+
+QVector3D pointOnPlane(QVector3D point, QVector3D plane);
 #endif // UTILS_H

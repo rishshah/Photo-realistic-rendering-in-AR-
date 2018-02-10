@@ -1,13 +1,15 @@
 #ifndef MYGLWIDGET_H
 #define MYGLWIDGET_H
 
-#include<QtOpenGL/QGLFunctions>
-#include<QtWidgets/QOpenGLWidget>
-#include<QtGui/QOpenGLVertexArrayObject>
-#include<QtGui/QOpenGLBuffer>
-#include<QtGui/QOpenGLShaderProgram>
+#include <QtOpenGL/QGLFunctions>
+#include <QtWidgets/QOpenGLWidget>
+#include <QtGui/QOpenGLVertexArrayObject>
+#include <QtGui/QOpenGLBuffer>
+#include <QtGui/QOpenGLShaderProgram>
 #include <QMatrix4x4>
 #include <QVector3D>
+#include "plane.h"
+#include "point.h"
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
@@ -21,11 +23,10 @@ public:
 
     QSize minimumSizeHint() const Q_DECL_OVERRIDE;
     QSize sizeHint() const Q_DECL_OVERRIDE;
-    void pan_mousePressEvent(QMouseEvent *event);
-    void pan_mouseMoveEvent(QMouseEvent *event);
-    void select_mousePressEvent(QMouseEvent *event);
-    void select_mouseMoveEvent(QMouseEvent *event);
-    void best_plane();
+    void mousePress(QMouseEvent *event);
+    void mouseMove(QMouseEvent *event, bool select_mode, bool add_mode);
+    void add_plane();
+    void remove_plane();
 
 public slots:
     void setXRotation(int angle);
@@ -45,13 +46,7 @@ protected:
 
 private:
     void read_points();
-    void setUpPositionBuffer();
-    void setUpColorBuffer();
-    void setUpGridBuffer();
-    bool between_corners(QVector3D point, QVector3D c1, QVector3D c2);
-    void draw_plane(QVector3D plane, QVector<QVector3D> points);
-
-    QVector<QVector3D> m_points_pos, m_points_col, m_grid_pos, m_grid_col;
+    void draw_scene();
 
     int m_xRot;
     int m_yRot;
@@ -61,11 +56,14 @@ private:
     QPoint m_lastPos;
 
     QOpenGLVertexArrayObject m_vao;
-    QOpenGLBuffer m_vbo_pos, m_vbo_col, m_vbo_grid_pos, m_vbo_grid_col;
+    QOpenGLBuffer m_vbo;
+
+    QVector<Plane> m_planes;
+    QVector<Point> m_points;
 
     QOpenGLShaderProgram *m_program;
 
-    int m_mvMatrixLoc;
+    int m_mvMatrixLoc, m_vColor, m_vPosition;
 
     QMatrix4x4 m_proj;
     QMatrix4x4 m_camera;
