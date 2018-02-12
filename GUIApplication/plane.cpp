@@ -7,6 +7,20 @@ Plane::Plane(){
     initializeOpenGLFunctions();
 }
 
+float Plane::num_between_corners(QMatrix4x4 transform, QVector3D c1, QVector3D c2){
+    int num_bw_corners = 0;
+    for(int i=0;i<m_points.size(); i++){
+        num_bw_corners += between_corners(transform, m_points[i].position, c1, c2)?1:0;
+    }
+    return (float)(num_bw_corners/(float)m_points.size());
+}
+
+void Plane::recolor(float r, float g, float b){
+    for(int i=0; i<m_points.size(); i++){
+        m_points[i].color = QVector3D(r,g,b);
+    }
+}
+
 Plane::Plane(QVector3D equation, QVector<QVector3D> points){
     initializeOpenGLFunctions();
     m_equation = equation;
@@ -23,6 +37,7 @@ void Plane::setUpBuffer(){
 
 void Plane::draw(QOpenGLShaderProgram *program, int vPosition, int vColor){
     m_vbo.bind();
+    glBufferData (GL_ARRAY_BUFFER, m_points.size() * sizeof(Point), &m_points[0], GL_STATIC_DRAW);
     program->enableAttributeArray(vPosition);
     glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(0) );
     program->enableAttributeArray(vColor);

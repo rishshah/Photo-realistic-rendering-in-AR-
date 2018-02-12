@@ -33,14 +33,20 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 
 - Display in changed data-structures
 - Multiple plane selection
-- Plane display nicely (bounded)
+- Plane display nicely (bounded partial) ASK
 - Input and render meshes
-
-## Plan
-- Select(Snap to plane) for removal
 - Load texture from png
 - Display texture and change data structures
-- Use keyframes to interpolate camera
+- Select(Snap to plane) for removal
+
+## Plan
+- Use keyframes to interpolate camera ASK
+- Adjustment mode ASK
+- Translation in PAN MODE
+- Resizing input mesh
+- Bringing input mesh to front
+- Rendering input mesh from camera
+
 
 ### GUI Application Interface Actions Remaining
 - Getting input meshes to place on the plane

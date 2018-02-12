@@ -62,11 +62,11 @@
     </item>
    </layout>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="pushButton_add_mesh">
    <property name="geometry">
     <rect>
      <x>490</x>
-     <y>420</y>
+     <y>360</y>
      <width>89</width>
      <height>25</height>
     </rect>
@@ -75,7 +75,7 @@
     <string>Add Mesh </string>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>490</x>
@@ -107,6 +107,19 @@
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QPushButton" name="pushButton_playback">
+   <property name="geometry">
+    <rect>
+     <x>490</x>
+     <y>390</y>
+     <width>89</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>PlayBack</string>
+   </property>
   </widget>
  </widget>
  <customwidgets>

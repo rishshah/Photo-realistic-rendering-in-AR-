@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QSurfaceFormat fmt;
-    fmt.setVersion( 3, 3 );
+    fmt.setVersion( 4, 0 );
     fmt.setProfile( QSurfaceFormat::CoreProfile );
     QSurfaceFormat::setDefaultFormat( fmt );
     MainWindow w;

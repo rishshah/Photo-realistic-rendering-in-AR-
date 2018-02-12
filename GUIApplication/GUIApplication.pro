@@ -29,7 +29,9 @@ HEADERS  += mainwindow.h \
     plane.h \
     point.h
 
-INCLUDEPATH += "/home/rishshah/Downloads/Sem6/Study_Material/RnD/Photo-realistic-rendering-in-AR-/ORB_SLAM2/Thirdparty/eigen-eigen-b9cd8366d4e8"
+INCLUDEPATH += /home/rishshah/Downloads/Sem6/Study_Material/RnD/Photo-realistic-rendering-in-AR-/ORB_SLAM2/Thirdparty/eigen-eigen-b9cd8366d4e8
+
+LIBS += -lpng
 
 FORMS    += mainwindow.ui \
     imagemode.ui \

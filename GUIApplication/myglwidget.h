@@ -27,6 +27,8 @@ public:
     void mouseMove(QMouseEvent *event, bool select_mode, bool add_mode);
     void add_plane();
     void remove_plane();
+    void playback();
+    void fill_image_data(std::string dir, std::string csv);
     void input_mesh(std::string f);
 
 public slots:
@@ -49,6 +51,8 @@ private:
     void read_points();
     void draw_scene();
     void draw_mesh();
+    void draw_background();
+    void init_background();
 
     int m_xRot;
     int m_yRot;
@@ -56,6 +60,7 @@ private:
     int m_mode;
 
     QPoint m_lastPos;
+    int m_selected_plane;
 
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer m_scene_vbo, m_mesh_vbo, m_bg_vbo;
@@ -65,11 +70,15 @@ private:
 
     QOpenGLShaderProgram *m_program;
 
-    int m_mvMatrixLoc, m_vColor, m_vPosition;
+    int m_mvMatrixLoc, m_vColor, m_vPosition, m_uIs_tp, m_vTexCoord;
+    GLuint bg_tex;
 
     QMatrix4x4 m_proj;
     QMatrix4x4 m_camera;
     QMatrix4x4 m_world;
+
+    std::vector<std::pair<std::string, double> > m_image_data;
+    std::string m_image_dir;
 };
 
 #endif // MYGLWIDGET_H

@@ -9,6 +9,7 @@ MyGLWidget::MyGLWidget(QWidget *parent)
     : QOpenGLWidget(parent),
       m_xRot(0),m_yRot(0),m_zRot(0),
       m_mode(0),
+      m_selected_plane(-1),
       m_program(0){
 }
 
@@ -70,24 +71,40 @@ static const char *vertexShaderSource =
     "#version 330\n"
     "in vec3 vPosition;\n"
     "in vec3 vColor;\n"
+    "in vec2 vTexCoord;\n"
+
+    "flat out int is_texture_present;\n"
     "out vec4 color;\n"
+    "out vec2 tex;\n"
+
+    "uniform int uIs_tp;\n"
     "uniform mat4 uModelViewMatrix;\n"
 
     "void main (void)\n"
     "{\n"
     "   gl_Position = uModelViewMatrix * vec4(vPosition, 1.0f);\n"
     "   color = vec4(vColor,1.0f);\n"
+    "   tex = vTexCoord;\n"
+    "   is_texture_present = uIs_tp;\n"
     "}";
 
 static const char *fragmentShaderSource =
-    "#version 330\n"
+    "#version 400\n"
 
     "in vec4 color;\n"
+    "in vec2 tex;\n"
+    "flat in int is_texture_present;\n"
+
     "out vec4 frag_color;\n"
+    "uniform sampler2D sampler;\n"
 
     "void main ()\n"
     "{\n"
-    "  frag_color = color;\n"
+    "   if(is_texture_present == 1){\n"
+    "       frag_color = texture2D(sampler, tex);\n"
+    "   } else {\n"
+    "       frag_color = color;\n"
+    "   }\n"
     "}";
 
 void MyGLWidget::initializeGL()
@@ -118,8 +135,11 @@ void MyGLWidget::initializeGL()
     m_vPosition = m_program->attributeLocation("vPosition");
     m_program->enableAttributeArray(m_vPosition);
 
-    m_mvMatrixLoc = m_program->uniformLocation("uModelViewMatrix");
+    m_vTexCoord = m_program->attributeLocation("vTexCoord");
+    m_program->enableAttributeArray(m_vTexCoord);
 
+    m_mvMatrixLoc = m_program->uniformLocation("uModelViewMatrix");
+    m_uIs_tp = m_program->uniformLocation("uIs_tp");
 
     // Our camera never changes in this example.
     m_camera.setToIdentity();
@@ -155,20 +175,36 @@ void MyGLWidget::paintGL()
 
     m_program->bind();
     m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_camera * m_world);
+    m_program->setUniformValue(m_uIs_tp, 0);
 
     m_vao.bind();
 
-    if(m_mode > 0){
+    switch (m_mode) {
+    case 1:
+        draw_scene();
         for(int i=0;i < m_planes.size(); i++){
             m_planes[i].draw(m_program, m_vPosition, m_vColor);
         }
-    }
+        break;
 
-    if(m_mode > 1){
+    case 2:
+        draw_scene();
+        for(int i=0;i < m_planes.size(); i++){
+            m_planes[i].draw(m_program, m_vPosition, m_vColor);
+        }
         draw_mesh();
+        break;
+
+    case 3:
+        draw_background();
+        draw_mesh();
+        break;
+
+    default:
+        draw_scene();
+        break;
     }
 
-    draw_scene();
     m_vao.release();
     m_program->release();
 }
@@ -180,6 +216,9 @@ void MyGLWidget::resizeGL(int w, int h)
 }
 
 void MyGLWidget::draw_mesh(){
+    m_program->setUniformValue(m_uIs_tp, 0);
+    m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_camera * m_world);
+
     m_mesh_vbo.bind();
     glBufferData (GL_ARRAY_BUFFER, m_mesh_points.size() * sizeof(Point), &m_mesh_points[0], GL_STATIC_DRAW);
 
@@ -195,8 +234,19 @@ void MyGLWidget::draw_mesh(){
 }
 
 void MyGLWidget::draw_background(){
+    m_program->setUniformValue(m_uIs_tp, 1);
+    m_program->setUniformValue(m_mvMatrixLoc, QMatrix4x4());
+
     m_bg_vbo.bind();
+    std::string s = m_image_dir + "/" + m_image_data[0].first;
+    bg_tex = png_texture_load(s.c_str());
+
+    glBindTexture(GL_TEXTURE_2D, bg_tex);
+
     glBufferData (GL_ARRAY_BUFFER, m_bg_points.size() * sizeof(Point), &m_bg_points[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(m_vTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(2 * sizeof(QVector3D)));
+    m_program->enableAttributeArray(m_vTexCoord);
 
     glVertexAttribPointer(m_vPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(0) );
     m_program->enableAttributeArray(m_vPosition);
@@ -207,6 +257,35 @@ void MyGLWidget::draw_background(){
     glDrawArrays(GL_TRIANGLES, 0, m_bg_points.size());
 
     m_bg_vbo.release();
+}
+
+void MyGLWidget::fill_image_data(std::string image_dir, std::string image_info_csv){
+    m_image_dir = image_dir;
+    FILE *fp_input = fopen(image_info_csv.c_str(), "r" );
+    if (fp_input ==  NULL) {
+         QMessageBox::critical(this,"Error", "file corrupt");
+    } else {
+        m_image_data.clear();
+        char img_file[200];
+        float timestamp;
+        while(fscanf (fp_input, "%f, %s", &timestamp, img_file) != EOF){
+            m_image_data.push_back(std::make_pair(img_file,timestamp));
+        }
+        fclose(fp_input);
+    }
+
+    //    fp_input = fopen(SLAM_KFS_FILEPATH, "r" );
+    //    if (fp_input ==  NULL) {
+    //         QMessageBox::critical(this,"Error", "file keyframes corrupt");
+    //    } else {
+    //        m_image_data.clear();
+    //        char img_file[200];
+    //        float timestamp;
+    //        while(fscanf (fp_input, "%f, %s", &timestamp, img_file) != EOF){
+    //            m_image_data.push_back(std::make_pair(img_file,timestamp));
+    //        }
+    //        fclose(fp_input);
+    //    }
 }
 
 void MyGLWidget::draw_scene(){
@@ -251,14 +330,22 @@ void MyGLWidget::input_mesh(std::string fileName){
         }
         fclose(fp_input);
     }
-
-    m_mode ++;
-
     m_mesh_vbo.create();
-    m_mesh_vbo.bind();
-    glBufferData (GL_ARRAY_BUFFER, m_mesh_points.size() * sizeof(Point), &m_mesh_points[0], GL_STATIC_DRAW);
-    m_mesh_vbo.release();
+    m_mode = 2;
+    update();
+}
 
+void MyGLWidget::playback(){
+    int i = 1 , z= -1;
+    m_bg_points.append(Point(QVector3D(-1,1,z), QVector2D(0,i)));
+    m_bg_points.append(Point(QVector3D(-1,-1,z), QVector2D(0,0)));
+    m_bg_points.append(Point(QVector3D(1,1,z), QVector2D(i,i)));
+    m_bg_points.append(Point(QVector3D(1,1,z), QVector2D(i,i)));
+    m_bg_points.append(Point(QVector3D(-1,-1,z), QVector2D(0,0)));
+    m_bg_points.append(Point(QVector3D(1,-1,z), QVector2D(i,0)));
+    m_bg_vbo.create();
+    m_mode = 3;
+    update();
 }
 
 void MyGLWidget::mousePress(QMouseEvent *event){
@@ -279,8 +366,8 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode, bool add_mode){
         }
         m_lastPos = event->pos();
     } else {
-        if(add_mode){ // Show selected points
-            QVector3D corner1 = QVector3D(m_lastPos.x(), m_lastPos.y(), 0);
+        QVector3D corner1 = QVector3D(m_lastPos.x(), m_lastPos.y(), 0);
+        if(add_mode){ // ADD Mode : Show selected points
             for(int i=0; i<m_scene_points.size(); i++){
                 if (between_corners(m_proj * m_camera * m_world, m_scene_points[i].position, corner1, QVector3D(event->x(), event->y(), 0))){
                     m_scene_points[i].color = QVector3D(1,0,0);
@@ -288,8 +375,24 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode, bool add_mode){
                     m_scene_points[i].color = QVector3D(1,1,1);
                 }
             }
-        } else { // Show selected plane
-
+        } else { // REMOVE Mode : Show selected plane
+            m_selected_plane = -1;
+            float fraction_inside = 0;
+            for(int i=0; i<m_planes.size(); i++){
+                float curr_fraction = m_planes[i].num_between_corners(m_proj * m_camera * m_world, corner1, QVector3D(event->x(), event->y(),0));
+                if(curr_fraction > fraction_inside){
+                    fraction_inside = curr_fraction;
+                    m_selected_plane = i;
+                }
+            }
+            if (m_selected_plane != -1){
+                for(int i=0; i<m_planes.size(); i++){
+                    if(m_selected_plane != i){
+                        m_planes[i].recolor(0,0,1);
+                    }
+                }
+                m_planes[m_selected_plane].recolor(0,1,0);
+            }
         }
     }
     update();
@@ -352,5 +455,9 @@ void MyGLWidget::add_plane(){
 }
 
 void MyGLWidget::remove_plane(){
-
+    if(m_selected_plane != -1){
+        m_planes.remove(m_selected_plane);
+        m_selected_plane = -1;
+        update();
+    }
 }

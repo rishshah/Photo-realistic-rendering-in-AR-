@@ -19,6 +19,8 @@ private:
 
 public:
     Plane();
+    float num_between_corners(QMatrix4x4 transform, QVector3D c1, QVector3D c2);
+    void recolor(float r, float g, float b);
     Plane(QVector3D equation, QVector<QVector3D> points);
     void draw(QOpenGLShaderProgram *program, int vPosition, int vColor);
 };

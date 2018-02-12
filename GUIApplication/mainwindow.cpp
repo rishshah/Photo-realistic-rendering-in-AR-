@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "utils.h"
 #include "ui_mainwindow.h"
-#include "myglwidget.h"
+#include "openglwindow.h"
 #include "imagemode.h"
 #include<QMessageBox>
 #include<QFileDialog>
@@ -41,8 +41,9 @@ void MainWindow::on_continue_pushbutton_clicked()
 
         if (result == 0){
             hide();
-            MyGLWidget glWindow;
-            glWindow.show();
+            OpenGLWindow o(this, ".", ".");
+            o.setModal(true);
+            o.exec();
         } else {
             QMessageBox::critical(this,"Error","Internal");
         }

@@ -3,14 +3,18 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-OpenGLWindow::OpenGLWindow(QWidget *parent) :
+OpenGLWindow::OpenGLWindow(QWidget *parent, std::string image_dir, std::string image_info_csv) :
     QDialog(parent),
     ui(new Ui::OpenGLWindow)
 {
     ui->setupUi(this);
+    ui->openGLWidget->fill_image_data(image_dir, image_info_csv);
     ui->pan_radioButton->setChecked(true);
     ui->radioButton_add->setChecked(true);
+    ui->pushButton_playback->setVisible(false);
 }
+
+
 
 OpenGLWindow::~OpenGLWindow()
 {
@@ -19,9 +23,7 @@ OpenGLWindow::~OpenGLWindow()
 
 void OpenGLWindow::mousePressEvent(QMouseEvent *event)
 {
-//    bool select_mode = ui->select_radioButton->isChecked();
-//    bool add_mode = ui->radioButton_add->isChecked();
-    ui->openGLWidget->mousePress(event);
+  ui->openGLWidget->mousePress(event);
 }
 
 void OpenGLWindow::mouseMoveEvent(QMouseEvent *event){
@@ -40,8 +42,14 @@ void OpenGLWindow::on_pushButton_confirm_clicked()
     }
 }
 
-void OpenGLWindow::on_pushButton_clicked()
+void OpenGLWindow::on_pushButton_add_mesh_clicked()
 {
     QString meshFile = QFileDialog::getOpenFileName(this, tr("Choose Mesh Object File"), "", tr("Object (*.obj);; All files (*.*)"));
     ui->openGLWidget->input_mesh(meshFile.toUtf8().constData());
+    ui->pushButton_playback->setVisible(true);
+}
+
+void OpenGLWindow::on_pushButton_playback_clicked()
+{
+   ui->openGLWidget->playback();
 }

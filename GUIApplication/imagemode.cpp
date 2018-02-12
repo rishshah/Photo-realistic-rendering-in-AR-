@@ -38,8 +38,8 @@ void ImageMode::on_image_csv_button_clicked()
 
 void ImageMode::on_run_pushButton_clicked()
 {
-//    std::string imageDirectory = ui->image_dir_label->text().toUtf8().constData();
-//    std::string imageCSV = ui->image_csv_label->text().toUtf8().constData();
+    std::string imageDirectory = ui->image_dir_label->text().toUtf8().constData();
+    std::string imageCSV = ui->image_csv_label->text().toUtf8().constData();
 
 //    if (imageDirectory == "-" or imageCSV == "-"){
 //        QMessageBox::critical(this,"Error","Choose both files before run");
@@ -55,7 +55,7 @@ void ImageMode::on_run_pushButton_clicked()
 //    int res = std::system(s.c_str());
 //    if(res == 0){
         hide();
-        OpenGLWindow o(this);
+        OpenGLWindow o(this, imageDirectory, imageCSV);
         o.setModal(true);
         o.exec();
 //    } else {

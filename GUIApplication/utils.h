@@ -32,6 +32,7 @@
 #include <cmath>
 #include <QVector3D>
 #include <QVector>
+#include <libpng/png.h>
 
 void get3Points(int n,int&x,int&y,int&z);
 
@@ -46,4 +47,9 @@ bool good_enough(QVector<QVector3D> points, int good_num_points);
 bool between_corners(QMatrix4x4 transform, QVector3D point, QVector3D c1, QVector3D c2);
 
 QVector3D pointOnPlane(QVector3D point, QVector3D plane);
+
+GLuint png_texture_load(const char * file_name);
+
+GLuint LoadTexture(const char* filename, int width, int height);
+
 #endif // UTILS_H

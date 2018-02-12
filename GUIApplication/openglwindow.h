@@ -11,9 +11,8 @@ class OpenGLWindow;
 class OpenGLWindow : public QDialog
 {
     Q_OBJECT
-
 public:
-    explicit OpenGLWindow(QWidget *parent = 0);
+    explicit OpenGLWindow(QWidget *parent, std::string  dir, std::string file);
     ~OpenGLWindow();
 
 protected:
@@ -22,7 +21,9 @@ protected:
 private slots:
     void on_pushButton_confirm_clicked();
 
-    void on_pushButton_clicked();
+    void on_pushButton_add_mesh_clicked();
+
+    void on_pushButton_playback_clicked();
 
 private:
     Ui::OpenGLWindow *ui;
