@@ -32,6 +32,11 @@ void OpenGLWindow::mouseMoveEvent(QMouseEvent *event){
     ui->openGLWidget->mouseMove(event, select_mode, add_mode);
 }
 
+void OpenGLWindow::keyPressEvent(QKeyEvent *event){
+    if(ui->pan_radioButton->isChecked()){
+        ui->openGLWidget->keyPress(event);
+    }
+}
 
 void OpenGLWindow::on_pushButton_confirm_clicked()
 {

@@ -38,14 +38,14 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - Load texture from png
 - Display texture and change data structures
 - Select(Snap to plane) for removal
+- Translation in PAN MODE
+- Bringing input mesh to front
+- Rendering input mesh from camera 
 
 ## Plan
 - Use keyframes to interpolate camera ASK
 - Adjustment mode ASK
-- Translation in PAN MODE
-- Resizing input mesh
-- Bringing input mesh to front
-- Rendering input mesh from camera
+- Resizing input mesh B4
 
 
 ### GUI Application Interface Actions Remaining

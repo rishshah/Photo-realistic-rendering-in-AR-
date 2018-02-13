@@ -8,8 +8,18 @@
 #include <QtGui/QOpenGLShaderProgram>
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QMouseEvent>
+#include <qt5/QtOpenGL/QGLShaderProgram>
+#include <QCoreApplication>
+#include <QMessageBox>
+#include <QTimer>
 #include "plane.h"
 #include "point.h"
+#include "utils.h"
+
+#define DX 0.1
+#define DY 0.1
+#define DZ 0.1
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
@@ -25,6 +35,7 @@ public:
     QSize sizeHint() const Q_DECL_OVERRIDE;
     void mousePress(QMouseEvent *event);
     void mouseMove(QMouseEvent *event, bool select_mode, bool add_mode);
+    void keyPress(QKeyEvent *event);
     void add_plane();
     void remove_plane();
     void playback();
@@ -54,13 +65,13 @@ private:
     void draw_background();
     void init_background();
 
-    int m_xRot;
-    int m_yRot;
-    int m_zRot;
+    int m_xRot; float m_xPos;
+    int m_yRot; float m_yPos;
+    int m_zRot; float m_zPos;
     int m_mode;
 
     QPoint m_lastPos;
-    int m_selected_plane;
+    int m_selected_plane, m_curr_image_index;
 
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer m_scene_vbo, m_mesh_vbo, m_bg_vbo;
@@ -79,6 +90,7 @@ private:
 
     std::vector<std::pair<std::string, double> > m_image_data;
     std::string m_image_dir;
+    QTimer *m_timer;
 };
 
 #endif // MYGLWIDGET_H
