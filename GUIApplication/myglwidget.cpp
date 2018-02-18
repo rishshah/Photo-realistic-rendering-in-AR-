@@ -2,15 +2,19 @@
 
 MyGLWidget::MyGLWidget(QWidget *parent)
     : QOpenGLWidget(parent),
-      m_xRot(0), m_yRot(0), m_zRot(0),
       m_xPos(0.0f), m_yPos(0.0f), m_zPos(0.0f),
+      m_xRot(0), m_yRot(0), m_zRot(0),
       m_mode(0),
-      m_selected_plane(-1),
+      m_i(0),
+      m_selected_plane_for_removal(-1),
       m_curr_image_index(0),
+      m_plane_1(-1),
+      m_plane_2(-1),
+      m_snap_plane(-1),
+      m_mesh_point_selected(false),
       m_program(0) {
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(update()));
-
 }
 
 MyGLWidget::~MyGLWidget() {
@@ -102,6 +106,7 @@ static const char *fragmentShaderSource =
     "{\n"
     "   if(is_texture_present == 1){\n"
     "       frag_color = texture2D(sampler, tex);\n"
+    "       frag_color = vec4(frag_color.x, frag_color.x, frag_color.x, 1);\n"
     "   } else {\n"
     "       frag_color = color;\n"
     "   }\n"
@@ -187,6 +192,7 @@ void MyGLWidget::paintGL() {
 
     case 3:
         draw_background();
+        draw_scene();
         draw_mesh();
         break;
 
@@ -206,20 +212,38 @@ void MyGLWidget::resizeGL(int w, int h) {
 
 void MyGLWidget::draw_mesh() {
     m_program->setUniformValue(m_uIs_tp, 0);
-    m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_world * m_camera);
+    m_keyframe_transform.setToIdentity();
 
-    m_mesh_vbo.bind();
-    glBufferData (GL_ARRAY_BUFFER, m_mesh_points.size() * sizeof(Point), &m_mesh_points[0], GL_STATIC_DRAW);
+    if(m_mode == 3){
+        int curr_keyframe_index = (m_keyframes.size() * m_curr_image_index)/m_image_data.size();
+        if(curr_keyframe_index >= m_keyframes.size() - 1){
+            curr_keyframe_index = m_keyframes.size() - 2;
+        }
 
-    glVertexAttribPointer(m_vPosition, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(0) );
-    m_program->enableAttributeArray(m_vPosition);
+        float curr_kf_eq_index = ((m_image_data.size() * curr_keyframe_index)/(float)m_keyframes.size());
+        float next_kf_eq_index = ((m_image_data.size() * (curr_keyframe_index + 1))/(float)m_keyframes.size());
+        float t = (m_curr_image_index - curr_kf_eq_index)/(next_kf_eq_index - curr_kf_eq_index);
+        QQuaternion slerp = QQuaternion::slerp(
+                    m_keyframes[curr_keyframe_index].orientation.conjugate(),
+                    m_keyframes[curr_keyframe_index + 1].orientation.conjugate(),
+                    t
+                );
 
-    glVertexAttribPointer(m_vColor, 3, GL_FLOAT, GL_FALSE, sizeof(Point), BUFFER_OFFSET(sizeof(QVector3D)));
-    m_program->enableAttributeArray(m_vColor);
+        QVector3D curr_pos = -m_keyframes[curr_keyframe_index].position;
+        QVector3D next_pos = -m_keyframes[curr_keyframe_index + 1].position;
+        QVector3D slerp_pos = curr_pos + t * (next_pos - curr_pos);
 
-    glDrawArrays(GL_TRIANGLES, 0, m_mesh_points.size());
-
-    m_mesh_vbo.release();
+        m_keyframe_transform.rotate(slerp);
+        m_keyframe_transform.translate(slerp_pos);
+        m_mesh.draw(m_program, m_proj * m_keyframe_transform, m_mvMatrixLoc, m_vPosition, m_vColor);
+    } else {
+        if(m_i >= m_keyframes.size()){
+            m_i = 0;
+        }
+        m_keyframe_transform.rotate(m_keyframes[m_i].orientation.conjugate());
+        m_keyframe_transform.translate(-m_keyframes[m_i].position);
+        m_mesh.draw(m_program, m_proj * m_keyframe_transform * m_world * m_camera, m_mvMatrixLoc, m_vPosition, m_vColor);
+    }
 }
 
 void MyGLWidget::draw_background() {
@@ -233,7 +257,7 @@ void MyGLWidget::draw_background() {
         m_mode = 1;
         return;
     }
-
+    printf("Image: %d\n", m_curr_image_index);
     glDisable(GL_DEPTH_TEST);
     m_program->setUniformValue(m_uIs_tp, 1);
     QMatrix4x4 m_ortho;
@@ -291,6 +315,39 @@ void MyGLWidget::fill_image_data(std::string image_dir, std::string image_info_c
 }
 
 void MyGLWidget::draw_scene() {
+    if(m_i >= m_keyframes.size()){
+        m_i = 0;
+    }
+    if (m_mode != 3 and m_i > 0){
+        m_keyframe_transform.setToIdentity();
+        m_keyframe_transform.rotate(m_keyframes[m_i].orientation.conjugate());
+        m_keyframe_transform.translate(-m_keyframes[m_i].position);
+        m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_keyframe_transform * m_world * m_camera);
+    }
+    if(m_mode == 3){
+        m_keyframe_transform.setToIdentity();
+        int curr_keyframe_index = (m_keyframes.size() * m_curr_image_index)/m_image_data.size();
+        if(curr_keyframe_index >= m_keyframes.size() - 1){
+            curr_keyframe_index = m_keyframes.size() - 2;
+        }
+
+        float curr_kf_eq_index = ((m_image_data.size() * curr_keyframe_index)/(float)m_keyframes.size());
+        float next_kf_eq_index = ((m_image_data.size() * (curr_keyframe_index + 1))/(float)m_keyframes.size());
+        float t = (m_curr_image_index - curr_kf_eq_index)/(next_kf_eq_index - curr_kf_eq_index);
+        QQuaternion slerp = QQuaternion::slerp(
+                    m_keyframes[curr_keyframe_index].orientation.conjugate(),
+                    m_keyframes[curr_keyframe_index + 1].orientation.conjugate(),
+                    t
+                );
+
+        QVector3D curr_pos = -m_keyframes[curr_keyframe_index].position;
+        QVector3D next_pos = -m_keyframes[curr_keyframe_index + 1].position;
+        QVector3D slerp_pos = curr_pos + t * (next_pos - curr_pos);
+
+        m_keyframe_transform.rotate(slerp);
+        m_keyframe_transform.translate(slerp_pos);
+        m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_keyframe_transform);
+    }
     m_scene_vbo.bind();
     glBufferData (GL_ARRAY_BUFFER, m_scene_points.size() * sizeof(Point), &m_scene_points[0], GL_STATIC_DRAW);
 
@@ -320,20 +377,21 @@ void MyGLWidget::read_points() {
 }
 
 void MyGLWidget::input_mesh(std::string fileName) {
-    FILE *fp_input = fopen(fileName.c_str(), "r" );
+
+    m_mesh = Mesh(fileName);
+    m_mode = 2;
+    FILE* fp_input = fopen(SLAM_KFS_FILEPATH, "r" );
     if (fp_input ==  NULL) {
         QMessageBox::critical(this, "Error", "file corrupt");
         return;
     } else {
-        m_mesh_points.clear();
-        float x, y, z, c1, c2, c3;
-        while (fscanf (fp_input, "%f %f %f %f %f %f", &x, &y, &z, &c1, &c2, &c3) != EOF) {
-            m_mesh_points.append(Point(QVector3D(x, y, z), QVector3D(c1, c2, c3)));
+        float t, x, y, z, q1, q2, q3, q4;
+        while (fscanf (fp_input, "%f %f %f %f %f %f %f %f", &t, &x, &y, &z, &q1, &q2, &q3 ,&q4) != EOF) {
+            m_keyframes.push_back(Keyframe(t, QVector3D(x, y, z), QQuaternion(q4, q1, q2, q3)));
         }
         fclose(fp_input);
     }
-    m_mesh_vbo.create();
-    m_mode = 2;
+
     update();
 }
 
@@ -347,6 +405,8 @@ void MyGLWidget::playback() {
     m_bg_points.append(Point(QVector3D(i, -1*i, z), QVector2D(j, 0)));
     m_bg_vbo.create();
     m_mode = 3;
+    m_curr_image_index = 0;
+
     m_timer->start(1);
     update();
 }
@@ -355,7 +415,7 @@ void MyGLWidget::mousePress(QMouseEvent *event) {
     m_lastPos = event->pos();
 }
 
-void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode, bool add_mode) {
+void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode,  std::string insert_mode) {
     if (!select_mode) { // PAN mode : changing rotation about origin
         int dx = event->x() - m_lastPos.x();
         int dy = event->y() - m_lastPos.y();
@@ -371,7 +431,7 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode, bool add_mode) 
     } else {
         QVector3D corner1 = QVector3D(m_lastPos.x(), m_lastPos.y(), 0);
         QMatrix4x4 transform = m_proj * m_world * m_camera;
-        if (add_mode) { // ADD Mode : Show selected points
+        if (insert_mode == "ADD_PLANE") { // Show selected points
             for (int i = 0; i < m_scene_points.size(); i++) {
                 if (between_corners(transform, m_scene_points[i].position, corner1, QVector3D(event->x(), event->y(), 0))) {
                     m_scene_points[i].color = QVector3D(1, 0, 0);
@@ -379,23 +439,54 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode, bool add_mode) 
                     m_scene_points[i].color = QVector3D(1, 1, 1);
                 }
             }
-        } else { // REMOVE Mode : Show selected plane
-            m_selected_plane = -1;
+        } else if(insert_mode == "REMOVE_PLANE"){ // Show selected plane
+            m_selected_plane_for_removal = -1;
             float fraction_inside = 0;
             for (int i = 0; i < m_planes.size(); i++) {
                 float curr_fraction = m_planes[i].num_between_corners(transform, corner1, QVector3D(event->x(), event->y(), 0));
                 if (curr_fraction > fraction_inside) {
                     fraction_inside = curr_fraction;
-                    m_selected_plane = i;
+                    m_selected_plane_for_removal = i;
                 }
             }
-            if (m_selected_plane != -1) {
+            if (m_selected_plane_for_removal != -1) {
                 for (int i = 0; i < m_planes.size(); i++) {
-                    if (m_selected_plane != i) {
+                    if (m_selected_plane_for_removal != i) {
                         m_planes[i].recolor(0, 0, 1);
                     }
                 }
-                m_planes[m_selected_plane].recolor(0, 1, 0);
+                m_planes[m_selected_plane_for_removal].recolor(0, 1, 0);
+            }
+        } else if(insert_mode == "ADJUST_PLANE"){ // Show selected plane point
+            if(m_plane_1 == -1){
+                for (int i = 0; i < m_planes.size(); i++) {
+                    if(m_planes[i].select_point(transform, corner1, QVector3D(event->x(), event->y(), 0))){
+                        m_planes[i].recolor_selected(1,0,0);
+                        m_plane_1 = i;
+                        break;
+                    }
+                }
+            } else if(m_plane_2 == -1){
+                for (int i = 0; i < m_planes.size(); i++) {
+                    if(m_planes[i].select_point(transform, corner1, QVector3D(event->x(), event->y(), 0))){
+                        m_planes[i].recolor_selected(1,0,0);
+                        if(m_plane_1 != i)
+                            m_plane_2 = i;
+                        break;
+                    }
+                }
+            }
+        } else if(insert_mode == "ADJUST_MESH"){ // Show selected plane point and mesh point
+            if(m_snap_plane == -1){
+                for (int i = 0; i < m_planes.size(); i++) {
+                    if(m_planes[i].select_point(transform, corner1, QVector3D(event->x(), event->y(), 0))){
+                        m_planes[i].recolor_selected(1,1,0);
+                        m_snap_plane = i;
+                        break;
+                    }
+                }
+            } else {
+                m_mesh_point_selected = m_mesh.select_point(m_keyframe_transform * transform, corner1, QVector3D(event->x(), event->y(), 0));
             }
         }
     }
@@ -422,6 +513,10 @@ void MyGLWidget::keyPress(QKeyEvent *event){
     }
     else if(event->key() == Qt::Key_Z){
         m_zPos += DZ;
+    }
+
+    if(event->key() == Qt::Key_P){
+        m_i++;
     }
     update();
 }
@@ -481,9 +576,35 @@ void MyGLWidget::add_plane() {
 }
 
 void MyGLWidget::remove_plane() {
-    if (m_selected_plane != -1) {
-        m_planes.remove(m_selected_plane);
-        m_selected_plane = -1;
+    if (m_selected_plane_for_removal != -1) {
+        m_planes.remove(m_selected_plane_for_removal);
+        m_selected_plane_for_removal = -1;
         update();
     }
+}
+
+void MyGLWidget::adjust_planes() {
+    if(m_plane_1 != -1 and m_plane_2 != -1){
+        m_planes[m_plane_1].adjust(m_planes[m_plane_2].get_selected_point());
+        m_planes[m_plane_1].recolor_selected(0,0,1);
+        m_planes[m_plane_2].recolor_selected(0,0,1);
+    } else {
+        if(m_plane_1 != -1)
+            m_planes[m_plane_1].recolor_selected(0,0,1);
+        if(m_plane_2 != -1)
+            m_planes[m_plane_2].recolor_selected(0,0,1);
+    }
+    m_plane_1 = m_plane_2 = -1;
+    update();
+}
+
+void MyGLWidget::adjust_mesh(){
+    if(m_mesh_point_selected and m_snap_plane != -1){
+        QMatrix4x4 transform = m_world * m_camera;
+        m_mesh.adjust(m_planes[m_snap_plane].get_selected_point(), transform, m_keyframe_transform * transform);
+    }
+    if(m_snap_plane != -1)
+        m_planes[m_snap_plane].recolor_selected(0,0,1);
+    m_snap_plane = -1;
+    update();
 }

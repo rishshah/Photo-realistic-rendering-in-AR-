@@ -40,7 +40,8 @@ void ImageMode::on_run_pushButton_clicked()
 {
     std::string imageDirectory = ui->image_dir_label->text().toUtf8().constData();
     std::string imageCSV = ui->image_csv_label->text().toUtf8().constData();
-
+    imageDirectory = BASE_DIR "/V1_01_easy/mav0/cam0/data";
+    imageCSV  = BASE_DIR "/V1_01_easy/mav0/cam0/data.csv";
 //    if (imageDirectory == "-" or imageCSV == "-"){
 //        QMessageBox::critical(this,"Error","Choose both files before run");
 //        return;

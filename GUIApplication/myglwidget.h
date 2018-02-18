@@ -13,7 +13,9 @@
 #include <QCoreApplication>
 #include <QMessageBox>
 #include <QTimer>
+#include <QQuaternion>
 #include "plane.h"
+#include "mesh.h"
 #include "point.h"
 #include "utils.h"
 
@@ -22,6 +24,15 @@
 #define DZ 0.1
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
+
+struct Keyframe{
+    float timestamp;
+    QVector3D position;
+    QQuaternion orientation;
+    Keyframe(){}
+    Keyframe(float t, QVector3D pos, QQuaternion q):
+        timestamp(t), position(pos), orientation(q){}
+};
 
 class MyGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
@@ -33,14 +44,27 @@ public:
 
     QSize minimumSizeHint() const Q_DECL_OVERRIDE;
     QSize sizeHint() const Q_DECL_OVERRIDE;
+
+    // Images input at start
+    void fill_image_data(std::string dir, std::string csv);
+
+    // Input Events
     void mousePress(QMouseEvent *event);
-    void mouseMove(QMouseEvent *event, bool select_mode, bool add_mode);
+    void mouseMove(QMouseEvent *event, bool select_mode, std::string insert_mode);
     void keyPress(QKeyEvent *event);
+
+    // Comfirm Click
     void add_plane();
     void remove_plane();
+    void adjust_planes();
+    void adjust_mesh();
+
+    // Playback Click
     void playback();
-    void fill_image_data(std::string dir, std::string csv);
+
+    // Add Mesh click
     void input_mesh(std::string f);
+
 
 public slots:
     void setXRotation(int angle);
@@ -70,25 +94,33 @@ private:
     int m_zRot; float m_zPos;
     int m_mode;
 
-    QPoint m_lastPos;
-    int m_selected_plane, m_curr_image_index;
-
-    QOpenGLVertexArrayObject m_vao;
-    QOpenGLBuffer m_scene_vbo, m_mesh_vbo, m_bg_vbo;
-
-    QVector<Plane> m_planes;
-    QVector<Point> m_scene_points, m_mesh_points, m_bg_points;
-
-    QOpenGLShaderProgram *m_program;
-
+    int m_i;
     int m_mvMatrixLoc, m_vColor, m_vPosition, m_uIs_tp, m_vTexCoord;
     GLuint bg_tex;
+
+    int m_selected_plane_for_removal, m_curr_image_index;
+    int m_plane_1, m_plane_2;
+    int m_snap_plane;
+    bool m_mesh_point_selected;
+
+    QPoint m_lastPos;
+
+    QOpenGLVertexArrayObject m_vao;
+    QOpenGLBuffer m_scene_vbo, m_bg_vbo;
+
+    QVector<Plane> m_planes;
+    Mesh m_mesh;
+
+    QVector<Point> m_scene_points, m_bg_points;
+    QOpenGLShaderProgram *m_program;
 
     QMatrix4x4 m_proj;
     QMatrix4x4 m_camera;
     QMatrix4x4 m_world;
+    QMatrix4x4 m_keyframe_transform;
 
     std::vector<std::pair<std::string, double> > m_image_data;
+    std::vector<Keyframe> m_keyframes;
     std::string m_image_dir;
     QTimer *m_timer;
 };

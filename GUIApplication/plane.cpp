@@ -35,6 +35,28 @@ void Plane::setUpBuffer(){
     m_vbo.release();
 }
 
+void Plane::adjust(QVector3D v){
+    m_points[m_selected_point].position = v;
+    m_points[3]= m_points[0] ;
+    m_points[4]= m_points[2] ;
+}
+
+bool Plane::select_point(QMatrix4x4 transform, QVector3D c1, QVector3D c2){
+    for(int i=0;i<m_points.size(); i++){
+        if(between_corners(transform, m_points[i].position, c1, c2)){
+            m_selected_point = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+void Plane::recolor_selected(float r, float g, float b){
+    m_points[m_selected_point].color = QVector3D(r,g,b);
+    m_points[3]= m_points[0] ;
+    m_points[4]= m_points[2] ;
+}
+
 void Plane::draw(QOpenGLShaderProgram *program, int vPosition, int vColor){
     m_vbo.bind();
     glBufferData (GL_ARRAY_BUFFER, m_points.size() * sizeof(Point), &m_points[0], GL_STATIC_DRAW);

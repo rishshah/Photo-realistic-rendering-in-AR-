@@ -16,8 +16,13 @@ private:
     QVector<Point> m_points;
     void calculate_Points(QVector<QVector3D> points);
     void setUpBuffer();
+    int m_selected_point;
 
 public:
+    QVector3D get_selected_point(){return m_points[m_selected_point].position;}
+    void adjust(QVector3D v);
+    bool select_point(QMatrix4x4 transform, QVector3D c1, QVector3D c2);
+    void recolor_selected(float r, float g, float b);
     Plane();
     float num_between_corners(QMatrix4x4 transform, QVector3D c1, QVector3D c2);
     void recolor(float r, float g, float b);

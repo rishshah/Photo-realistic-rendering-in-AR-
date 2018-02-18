@@ -24,28 +24,30 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 
 ## Status
 - ORB SLAM library output 3d points obtained
-- One Plane fitted to points in the space
+- Plane fitted to points in the space
 - Getting input -> either attached camera/ video file input
 - Processing file and displaying the progress window from ORBSLAM
-- Displaying processed points in may be 3 different views (Without superimposing it on the image)
+- Displaying processed points
 - Mouse selection tool for choosing a bunch of points
 - Fitting a plane to those points
-
-- Display in changed data-structures
 - Multiple plane selection
-- Plane display nicely (bounded partial) ASK
 - Input and render meshes
 - Load texture from png
-- Display texture and change data structures
 - Select(Snap to plane) for removal
+- Display texture and change data structures
 - Translation in PAN MODE
 - Bringing input mesh to front
 - Rendering input mesh from camera 
+- Plane display nicely (bounded partial)
+
+- Resizing feature in input mesh through object file
+- Snap planes done
+- Snap mesh to plane done
+- In progress matching video to exact keyframes 
 
 ## Plan
-- Use keyframes to interpolate camera ASK
-- Adjustment mode ASK
-- Resizing input mesh B4
+- Produce images for webcam (google today)
+- Some storage of planes (Secondary)
 
 
 ### GUI Application Interface Actions Remaining

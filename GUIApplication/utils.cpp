@@ -168,7 +168,7 @@ GLuint png_texture_load(const char * file_name)
     png_get_IHDR(png_ptr, info_ptr, &temp_width, &temp_height, &bit_depth, &color_type,
         NULL, NULL, NULL);
 
-    printf("%s: %lux%lu %d\n", file_name, temp_width, temp_height, color_type);
+//    printf("%s: %lux%lu %d\n", file_name, temp_width, temp_height, color_type);
 
     if (bit_depth != 8)
     {
