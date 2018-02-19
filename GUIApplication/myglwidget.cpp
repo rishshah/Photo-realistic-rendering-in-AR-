@@ -8,6 +8,7 @@ MyGLWidget::MyGLWidget(QWidget *parent)
       m_i(0),
       m_selected_plane_for_removal(-1),
       m_curr_image_index(0),
+      m_curr_keyframe_index(0),
       m_plane_1(-1),
       m_plane_2(-1),
       m_snap_plane(-1),
@@ -215,32 +216,28 @@ void MyGLWidget::draw_mesh() {
     m_keyframe_transform.setToIdentity();
 
     if(m_mode == 3){
-        int curr_keyframe_index = (m_keyframes.size() * m_curr_image_index)/m_image_data.size();
-        if(curr_keyframe_index >= m_keyframes.size() - 1){
-            curr_keyframe_index = m_keyframes.size() - 2;
-        }
-
-        float curr_kf_eq_index = ((m_image_data.size() * curr_keyframe_index)/(float)m_keyframes.size());
-        float next_kf_eq_index = ((m_image_data.size() * (curr_keyframe_index + 1))/(float)m_keyframes.size());
-        float t = (m_curr_image_index - curr_kf_eq_index)/(next_kf_eq_index - curr_kf_eq_index);
+        double curr_image_ts = m_image_data[m_curr_image_index].second;
+        m_curr_keyframe_index = get_keyframe_index(m_curr_keyframe_index, curr_image_ts);
+        float t = (curr_image_ts - m_keyframes[m_curr_keyframe_index].timestamp)
+                /(m_keyframes[m_curr_keyframe_index+1].timestamp- m_keyframes[m_curr_keyframe_index].timestamp);
         QQuaternion slerp = QQuaternion::slerp(
-                    m_keyframes[curr_keyframe_index].orientation.conjugate(),
-                    m_keyframes[curr_keyframe_index + 1].orientation.conjugate(),
+                    m_keyframes[m_curr_keyframe_index].orientation,
+                    m_keyframes[m_curr_keyframe_index + 1].orientation,
                     t
                 );
 
-        QVector3D curr_pos = -m_keyframes[curr_keyframe_index].position;
-        QVector3D next_pos = -m_keyframes[curr_keyframe_index + 1].position;
+        QVector3D curr_pos = -m_keyframes[m_curr_keyframe_index].position;
+        QVector3D next_pos = -m_keyframes[m_curr_keyframe_index + 1].position;
         QVector3D slerp_pos = curr_pos + t * (next_pos - curr_pos);
 
         m_keyframe_transform.rotate(slerp);
         m_keyframe_transform.translate(slerp_pos);
-        m_mesh.draw(m_program, m_proj * m_keyframe_transform, m_mvMatrixLoc, m_vPosition, m_vColor);
+        m_mesh.draw(m_program, m_proj * m_keyframe_transform * m_world * m_camera, m_mvMatrixLoc, m_vPosition, m_vColor);
     } else {
         if(m_i >= m_keyframes.size()){
             m_i = 0;
         }
-        m_keyframe_transform.rotate(m_keyframes[m_i].orientation.conjugate());
+        m_keyframe_transform.rotate(m_keyframes[m_i].orientation);
         m_keyframe_transform.translate(-m_keyframes[m_i].position);
         m_mesh.draw(m_program, m_proj * m_keyframe_transform * m_world * m_camera, m_mvMatrixLoc, m_vPosition, m_vColor);
     }
@@ -250,11 +247,20 @@ void MyGLWidget::draw_background() {
     if(m_curr_image_index < m_image_data.size()){
         std::string s = m_image_dir + "/" + m_image_data[m_curr_image_index].first;
         bg_tex = png_texture_load(s.c_str());
+        m_timer->stop();
+        delete m_timer;
+        m_timer =new QTimer(this);
+        connect(m_timer, SIGNAL(timeout()), this, SLOT(update()));
+        double time_next = m_image_data[m_curr_image_index+1].second - m_image_data[m_curr_image_index].second;
         m_curr_image_index++;
+        if (time_next < 0)
+            printf("SS");
+        m_timer->start(int(m_simulation_time_ms * time_next));
     } else {
         m_curr_image_index = 0;
-        m_timer->stop();
+        m_curr_keyframe_index = 0;
         m_mode = 1;
+        m_timer->stop();
         return;
     }
     printf("Image: %d\n", m_curr_image_index);
@@ -293,60 +299,69 @@ void MyGLWidget::fill_image_data(std::string image_dir, std::string image_info_c
     } else {
         m_image_data.clear();
         char img_file[200];
-        float timestamp;
-        while (fscanf (fp_input, "%f, %s", &timestamp, img_file) != EOF) {
+        double timestamp;
+        while (fscanf (fp_input, "%lf, %s", &timestamp, img_file) != EOF) {
             m_image_data.push_back(std::make_pair(img_file, timestamp));
         }
         fclose(fp_input);
     }
+    fp_input = fopen(SLAM_KFS_FILEPATH, "r" );
+    if (fp_input ==  NULL) {
+        QMessageBox::critical(this, "Error", "file corrupt");
+        return;
+    } else {
+        double t;float x, y, z, q1, q2, q3, q4;
+        while (fscanf (fp_input, "%lf %f %f %f %f %f %f %f", &t, &x, &y, &z, &q1, &q2, &q3 ,&q4) != EOF) {
+            m_keyframes.push_back(Keyframe(t, QVector3D(x, y, z), QQuaternion(q4, q1, q2, q3)));
+        }
+        fclose(fp_input);
+    }
 
-    //    fp_input = fopen(SLAM_KFS_FILEPATH, "r" );
-    //    if (fp_input ==  NULL) {
-    //         QMessageBox::critical(this,"Error", "file keyframes corrupt");
-    //    } else {
-    //        m_image_data.clear();
-    //        char img_file[200];
-    //        float timestamp;
-    //        while(fscanf (fp_input, "%f, %s", &timestamp, img_file) != EOF){
-    //            m_image_data.push_back(std::make_pair(img_file,timestamp));
-    //        }
-    //        fclose(fp_input);
-    //    }
+    for(int i=1; i< m_image_data.size()-1;i++){
+        m_image_data[i].second = (m_image_data[i].second - m_image_data[0].second)
+        /(m_image_data[m_image_data.size()-1].second - m_image_data[0].second);
+    }
+
+    for(int i=0; i< m_keyframes.size()-1;i++){
+        m_keyframes[i].timestamp = (m_keyframes[i].timestamp - m_image_data[0].second)
+        /(m_keyframes[m_keyframes.size()-1].timestamp - m_image_data[0].second);
+    }
+    m_image_data[0].second = 0;
+    m_image_data[m_image_data.size()-1].second = 1;
+
+//    m_keyframes[0].timestamp = 0;
+    m_keyframes[m_keyframes.size()-1].timestamp = 1;
 }
 
 void MyGLWidget::draw_scene() {
     if(m_i >= m_keyframes.size()){
         m_i = 0;
     }
-    if (m_mode != 3 and m_i > 0){
+    if (m_mode != 3){
         m_keyframe_transform.setToIdentity();
-        m_keyframe_transform.rotate(m_keyframes[m_i].orientation.conjugate());
+        m_keyframe_transform.rotate(m_keyframes[m_i].orientation);
         m_keyframe_transform.translate(-m_keyframes[m_i].position);
         m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_keyframe_transform * m_world * m_camera);
     }
     if(m_mode == 3){
         m_keyframe_transform.setToIdentity();
-        int curr_keyframe_index = (m_keyframes.size() * m_curr_image_index)/m_image_data.size();
-        if(curr_keyframe_index >= m_keyframes.size() - 1){
-            curr_keyframe_index = m_keyframes.size() - 2;
-        }
-
-        float curr_kf_eq_index = ((m_image_data.size() * curr_keyframe_index)/(float)m_keyframes.size());
-        float next_kf_eq_index = ((m_image_data.size() * (curr_keyframe_index + 1))/(float)m_keyframes.size());
-        float t = (m_curr_image_index - curr_kf_eq_index)/(next_kf_eq_index - curr_kf_eq_index);
+        double curr_image_ts = m_image_data[m_curr_image_index].second;
+        m_curr_keyframe_index = get_keyframe_index(m_curr_keyframe_index, curr_image_ts);
+        float t = (curr_image_ts - m_keyframes[m_curr_keyframe_index].timestamp)
+                /(m_keyframes[m_curr_keyframe_index+1].timestamp- m_keyframes[m_curr_keyframe_index].timestamp);
         QQuaternion slerp = QQuaternion::slerp(
-                    m_keyframes[curr_keyframe_index].orientation.conjugate(),
-                    m_keyframes[curr_keyframe_index + 1].orientation.conjugate(),
+                    m_keyframes[m_curr_keyframe_index].orientation,
+                    m_keyframes[m_curr_keyframe_index + 1].orientation,
                     t
                 );
 
-        QVector3D curr_pos = -m_keyframes[curr_keyframe_index].position;
-        QVector3D next_pos = -m_keyframes[curr_keyframe_index + 1].position;
+        QVector3D curr_pos = -m_keyframes[m_curr_keyframe_index].position;
+        QVector3D next_pos = -m_keyframes[m_curr_keyframe_index + 1].position;
         QVector3D slerp_pos = curr_pos + t * (next_pos - curr_pos);
 
         m_keyframe_transform.rotate(slerp);
         m_keyframe_transform.translate(slerp_pos);
-        m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_keyframe_transform);
+        m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_keyframe_transform * m_world * m_camera);
     }
     m_scene_vbo.bind();
     glBufferData (GL_ARRAY_BUFFER, m_scene_points.size() * sizeof(Point), &m_scene_points[0], GL_STATIC_DRAW);
@@ -376,22 +391,20 @@ void MyGLWidget::read_points() {
     }
 }
 
+int MyGLWidget::get_keyframe_index(int start, double val){
+    for(int i=start;i<m_keyframes.size()-1;i++){
+        if(m_keyframes[i].timestamp < val and val < m_keyframes[i+1].timestamp)
+            return i;
+    }
+    if(start == 0)
+        return 0;
+    return m_keyframes.size()-2;
+}
+
 void MyGLWidget::input_mesh(std::string fileName) {
 
     m_mesh = Mesh(fileName);
     m_mode = 2;
-    FILE* fp_input = fopen(SLAM_KFS_FILEPATH, "r" );
-    if (fp_input ==  NULL) {
-        QMessageBox::critical(this, "Error", "file corrupt");
-        return;
-    } else {
-        float t, x, y, z, q1, q2, q3, q4;
-        while (fscanf (fp_input, "%f %f %f %f %f %f %f %f", &t, &x, &y, &z, &q1, &q2, &q3 ,&q4) != EOF) {
-            m_keyframes.push_back(Keyframe(t, QVector3D(x, y, z), QQuaternion(q4, q1, q2, q3)));
-        }
-        fclose(fp_input);
-    }
-
     update();
 }
 
@@ -405,9 +418,10 @@ void MyGLWidget::playback() {
     m_bg_points.append(Point(QVector3D(i, -1*i, z), QVector2D(j, 0)));
     m_bg_vbo.create();
     m_mode = 3;
+    m_simulation_time_ms = 30000;
     m_curr_image_index = 0;
 
-    m_timer->start(1);
+    m_timer->start(int(m_simulation_time_ms * m_image_data[m_curr_image_index+1].second));
     update();
 }
 
@@ -430,10 +444,10 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode,  std::string in
         m_lastPos = event->pos();
     } else {
         QVector3D corner1 = QVector3D(m_lastPos.x(), m_lastPos.y(), 0);
-        QMatrix4x4 transform = m_proj * m_world * m_camera;
+        QMatrix4x4 transform = m_world * m_camera;
         if (insert_mode == "ADD_PLANE") { // Show selected points
             for (int i = 0; i < m_scene_points.size(); i++) {
-                if (between_corners(transform, m_scene_points[i].position, corner1, QVector3D(event->x(), event->y(), 0))) {
+                if (between_corners(m_proj * transform, m_scene_points[i].position, corner1, QVector3D(event->x(), event->y(), 0))) {
                     m_scene_points[i].color = QVector3D(1, 0, 0);
                 } else {
                     m_scene_points[i].color = QVector3D(1, 1, 1);
@@ -443,7 +457,7 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode,  std::string in
             m_selected_plane_for_removal = -1;
             float fraction_inside = 0;
             for (int i = 0; i < m_planes.size(); i++) {
-                float curr_fraction = m_planes[i].num_between_corners(transform, corner1, QVector3D(event->x(), event->y(), 0));
+                float curr_fraction = m_planes[i].num_between_corners(m_proj * transform, corner1, QVector3D(event->x(), event->y(), 0));
                 if (curr_fraction > fraction_inside) {
                     fraction_inside = curr_fraction;
                     m_selected_plane_for_removal = i;
@@ -460,7 +474,7 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode,  std::string in
         } else if(insert_mode == "ADJUST_PLANE"){ // Show selected plane point
             if(m_plane_1 == -1){
                 for (int i = 0; i < m_planes.size(); i++) {
-                    if(m_planes[i].select_point(transform, corner1, QVector3D(event->x(), event->y(), 0))){
+                    if(m_planes[i].select_point(m_proj * transform, corner1, QVector3D(event->x(), event->y(), 0))){
                         m_planes[i].recolor_selected(1,0,0);
                         m_plane_1 = i;
                         break;
@@ -468,7 +482,7 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode,  std::string in
                 }
             } else if(m_plane_2 == -1){
                 for (int i = 0; i < m_planes.size(); i++) {
-                    if(m_planes[i].select_point(transform, corner1, QVector3D(event->x(), event->y(), 0))){
+                    if(m_planes[i].select_point(m_proj * transform, corner1, QVector3D(event->x(), event->y(), 0))){
                         m_planes[i].recolor_selected(1,0,0);
                         if(m_plane_1 != i)
                             m_plane_2 = i;
@@ -479,14 +493,14 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode,  std::string in
         } else if(insert_mode == "ADJUST_MESH"){ // Show selected plane point and mesh point
             if(m_snap_plane == -1){
                 for (int i = 0; i < m_planes.size(); i++) {
-                    if(m_planes[i].select_point(transform, corner1, QVector3D(event->x(), event->y(), 0))){
+                    if(m_planes[i].select_point(m_proj * transform, corner1, QVector3D(event->x(), event->y(), 0))){
                         m_planes[i].recolor_selected(1,1,0);
                         m_snap_plane = i;
                         break;
                     }
                 }
             } else {
-                m_mesh_point_selected = m_mesh.select_point(m_keyframe_transform * transform, corner1, QVector3D(event->x(), event->y(), 0));
+                m_mesh_point_selected = m_mesh.select_point(m_proj * transform, corner1, QVector3D(event->x(), event->y(), 0));
             }
         }
     }
@@ -601,7 +615,7 @@ void MyGLWidget::adjust_planes() {
 void MyGLWidget::adjust_mesh(){
     if(m_mesh_point_selected and m_snap_plane != -1){
         QMatrix4x4 transform = m_world * m_camera;
-        m_mesh.adjust(m_planes[m_snap_plane].get_selected_point(), transform, m_keyframe_transform * transform);
+        m_mesh.adjust(m_planes[m_snap_plane].get_selected_point(), transform, transform);
     }
     if(m_snap_plane != -1)
         m_planes[m_snap_plane].recolor_selected(0,0,1);

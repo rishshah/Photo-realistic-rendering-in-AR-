@@ -26,11 +26,11 @@
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 struct Keyframe{
-    float timestamp;
+    double timestamp;
     QVector3D position;
     QQuaternion orientation;
     Keyframe(){}
-    Keyframe(float t, QVector3D pos, QQuaternion q):
+    Keyframe(double t, QVector3D pos, QQuaternion q):
         timestamp(t), position(pos), orientation(q){}
 };
 
@@ -84,6 +84,7 @@ protected:
 
 private:
     void read_points();
+    int get_keyframe_index(int start, double val);
     void draw_scene();
     void draw_mesh();
     void draw_background();
@@ -98,7 +99,7 @@ private:
     int m_mvMatrixLoc, m_vColor, m_vPosition, m_uIs_tp, m_vTexCoord;
     GLuint bg_tex;
 
-    int m_selected_plane_for_removal, m_curr_image_index;
+    int m_selected_plane_for_removal, m_curr_image_index, m_curr_keyframe_index;
     int m_plane_1, m_plane_2;
     int m_snap_plane;
     bool m_mesh_point_selected;
@@ -123,6 +124,7 @@ private:
     std::vector<Keyframe> m_keyframes;
     std::string m_image_dir;
     QTimer *m_timer;
+    int m_simulation_time_ms;
 };
 
 #endif // MYGLWIDGET_H
