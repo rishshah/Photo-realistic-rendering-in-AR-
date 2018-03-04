@@ -29,8 +29,9 @@
 
 #define ADJUST_SCENE 0
 #define ADJUST_MESH 1
-#define PLAYBACK 2
-#define DEBUG 3
+#define ADJUST_INITIAL_FRAME 2
+#define PLAYBACK 3
+#define DEBUG 4
 
 #include <stdio.h>
 #include <Eigen/Dense>
