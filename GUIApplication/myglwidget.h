@@ -85,17 +85,20 @@ protected:
 private:
     void read_points();
     int get_keyframe_index(int start, double val);
+    int get_image_index(int start, double val);
+    void init_background();
+
     void draw_scene();
     void draw_mesh();
+    void draw_planes();
     void draw_background();
-    void init_background();
 
     int m_xRot; float m_xPos;
     int m_yRot; float m_yPos;
     int m_zRot; float m_zPos;
     int m_mode;
 
-    int m_i;
+    int m_i, m_ij;
     int m_mvMatrixLoc, m_vColor, m_vPosition, m_uIs_tp, m_vTexCoord;
     GLuint bg_tex;
 

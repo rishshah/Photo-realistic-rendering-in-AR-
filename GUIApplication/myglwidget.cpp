@@ -5,7 +5,7 @@ MyGLWidget::MyGLWidget(QWidget *parent)
       m_xPos(0.0f), m_yPos(0.0f), m_zPos(0.0f),
       m_xRot(0), m_yRot(0), m_zRot(0),
       m_mode(0),
-      m_i(0),
+      m_i(0),m_ij(0),
       m_selected_plane_for_removal(-1),
       m_curr_image_index(0),
       m_curr_keyframe_index(0),

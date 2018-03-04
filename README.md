@@ -20,7 +20,6 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 
 ### Photorealistic Rendering
 - Real research papers and look for implementation
-- ...
 
 ## Status
 - ORB SLAM library output 3d points obtained
@@ -33,27 +32,25 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - Multiple plane selection
 - Input and render meshes
 - Load texture from png
-- Select(Snap to plane) for removal
-- Display texture and change data structures
+- Select(Snap to) plane for removal
+- Display texture
 - Translation in PAN MODE
 - Bringing input mesh to front
 - Rendering input mesh from camera 
-- Plane display nicely (bounded partial)
+- Plane display nicely (bounded)
 
 - Resizing feature in input mesh through object file
-- Snap planes done
-- Snap mesh to plane done
-- In progress matching video to exact keyframes 
+- Snap mesh to plane
+- In progress matching video to exact keyframes (Some interference and non stable mapping)
+- Produce images for webcam
 
 ## Plan
-- Produce images for webcam (google today)
-- Some storage of planes (Secondary)
-
-
-### GUI Application Interface Actions Remaining
-- Getting input meshes to place on the plane
+- Some storage of planes (later)
 - Render it and superimpose on the video and playback
-
+	- Check if their cam images are aligned with the keyframes
+	- Give user an option to align if necessary
+	- Playback using bezier curve interpolation
+	
 
 #### Overview
 A GUI application for user to visualize augmented reality using script that builds ORBSLAM, processing the output for purpose of mounting a 3d surface on input 2d video for rendering synthetic meshes

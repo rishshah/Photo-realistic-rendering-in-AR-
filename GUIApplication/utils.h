@@ -27,6 +27,11 @@
 
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
+#define ADJUST_SCENE 0
+#define ADJUST_MESH 1
+#define PLAYBACK 2
+#define DEBUG 3
+
 #include <stdio.h>
 #include <Eigen/Dense>
 #include <cmath>

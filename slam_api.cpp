@@ -42,7 +42,7 @@ void LoadImages(const string &strImagePath, const string &strPathTimes,
             std::vector<string> v{explode(ss.str(), ',')};
             vstrImages.push_back(strImagePath + "/" + v[1]);
             double t = atof(v[0].c_str());
-            vTimeStamps.push_back(t / 1e9);
+            vTimeStamps.push_back(t);
 
         }
     }

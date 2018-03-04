@@ -38,10 +38,11 @@ void MainWindow::on_continue_pushbutton_clicked()
         putenv("LD_LIBRARY_PATH=" LD_LIBRARY_PATH);
         chdir(BASE_DIR);
         int result = std::system("./test " VOCABULARY " " CAM_SETTING);
-
+        std::string image_dir = BASE_DIR "images";
+        std::string image_csv = BASE_DIR "image_info.csv";
         if (result == 0){
             hide();
-            OpenGLWindow o(this, ".", ".");
+            OpenGLWindow o(this,image_dir, image_csv);
             o.setModal(true);
             o.exec();
         } else {
