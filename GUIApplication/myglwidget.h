@@ -93,6 +93,10 @@ private:
     void draw_planes();
     void draw_background();
 
+    void adjustWorldRotationTransform();
+    void adjustWorldTranslationTransform();
+    void adjustCameraTransform();
+
     int m_xRot; float m_xPos;
     int m_yRot; float m_yPos;
     int m_zRot; float m_zPos;
@@ -119,9 +123,9 @@ private:
     QOpenGLShaderProgram *m_program;
 
     QMatrix4x4 m_proj;
+    QMatrix4x4 m_worldTranslation;
+    QMatrix4x4 m_worldRotation;
     QMatrix4x4 m_camera;
-    QMatrix4x4 m_world;
-    QMatrix4x4 m_keyframe_transform;
 
     std::vector<std::pair<std::string, double> > m_image_data;
     std::vector<Keyframe> m_keyframes;

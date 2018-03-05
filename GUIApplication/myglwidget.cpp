@@ -156,18 +156,61 @@ void MyGLWidget::initializeGL() {
     m_program->release();
 }
 
+void MyGLWidget::adjustCameraTransform(){
+    if (m_mode != PLAYBACK){
+        m_camera.setToIdentity();
+        m_camera.translate(-m_keyframes[m_i].position);
+        m_camera.rotate(m_keyframes[m_i].orientation.conjugate());
+    } else {
+        double curr_image_ts = m_image_data[m_curr_image_index].second;
+        m_curr_keyframe_index = get_keyframe_index(std::max(m_curr_keyframe_index,0), curr_image_ts);
+        if (m_curr_keyframe_index != -1 and m_curr_keyframe_index != 2){
+            float t = (curr_image_ts - m_keyframes[m_curr_keyframe_index].timestamp)
+                    /(m_keyframes[m_curr_keyframe_index+1].timestamp- m_keyframes[m_curr_keyframe_index].timestamp);
+            QQuaternion slerp = QQuaternion::slerp(
+                        m_keyframes[m_curr_keyframe_index].orientation.conjugate(),
+                        m_keyframes[m_curr_keyframe_index + 1].orientation.conjugate(),
+                        t
+                    );
+
+            QVector3D curr_pos = -m_keyframes[m_curr_keyframe_index].position;
+            QVector3D next_pos = -m_keyframes[m_curr_keyframe_index + 1].position;
+            QVector3D slerp_pos = curr_pos + t * (next_pos - curr_pos);
+
+            m_camera.setToIdentity();
+            m_camera.rotate(slerp);
+            m_camera.translate(slerp_pos);
+        } else {
+            m_curr_image_index = 0;
+            m_curr_keyframe_index = 0;
+            m_i = 0;
+            m_mode = ADJUST_MESH;
+            m_timer->stop();
+            return;
+        }
+    }
+}
+
+void MyGLWidget::adjustWorldRotationTransform(){
+    m_worldRotation.setToIdentity();
+    m_worldRotation.rotate(180.0f - (m_xRot / 16.0f), 1, 0, 0);
+    m_worldRotation.rotate(m_yRot / 16.0f, 0, 1, 0);
+    m_worldRotation.rotate(m_zRot / 16.0f, 0, 0, 1);
+}
+
+void MyGLWidget::adjustWorldTranslationTransform(){
+    m_worldTranslation.setToIdentity();
+//    m_worldTranslation.scale(21.5/19.0, 18.0/12.0, 1);
+    m_worldTranslation.translate(m_xPos, m_yPos, m_zPos);
+}
+
 void MyGLWidget::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
-    m_world.setToIdentity();
-    m_world.rotate(180.0f - (m_xRot / 16.0f), 1, 0, 0);
-    m_world.rotate(m_yRot / 16.0f, 0, 1, 0);
-    m_world.rotate(m_zRot / 16.0f, 0, 0, 1);
-
-    m_camera.setToIdentity();
-    m_camera.scale(21.5/19.0, 18.0/13.0, 1);
-    m_camera.translate(m_xPos, m_yPos, m_zPos);
+    adjustCameraTransform();
+    adjustWorldRotationTransform();
+    adjustWorldTranslationTransform();
 
     m_program->bind();
     m_vao.bind();
@@ -206,10 +249,7 @@ void MyGLWidget::resizeGL(int w, int h) {
 
 void MyGLWidget::draw_planes(){
     m_program->setUniformValue(m_uIs_tp, 0);
-    m_keyframe_transform.setToIdentity();
-    m_keyframe_transform.translate(-m_keyframes[m_i].position);
-    m_keyframe_transform.rotate(m_keyframes[m_i].orientation);
-    m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_keyframe_transform * m_world * m_camera);
+    m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_worldRotation * m_camera * m_worldTranslation);
     for (int i = 0; i < m_planes.size(); i++) {
         m_planes[i].draw(m_program, m_vPosition, m_vColor);
     }
@@ -217,70 +257,38 @@ void MyGLWidget::draw_planes(){
 
 void MyGLWidget::draw_mesh() {
     m_program->setUniformValue(m_uIs_tp, 0);
-    m_keyframe_transform.setToIdentity();
-
-//    if(m_mode == PLAYBACK){
-//        double curr_image_ts = m_image_data[m_curr_image_index].second;
-//        m_curr_keyframe_index = get_keyframe_index(std::max(m_curr_keyframe_index,0), curr_image_ts);
-//        if (m_curr_keyframe_index != -1 and m_curr_keyframe_index != 2){
-//            float t = (curr_image_ts - m_keyframes[m_curr_keyframe_index].timestamp)
-//                    /(m_keyframes[m_curr_keyframe_index+1].timestamp- m_keyframes[m_curr_keyframe_index].timestamp);
-//            QQuaternion slerp = QQuaternion::slerp(
-//                        m_keyframes[m_curr_keyframe_index].orientation,
-//                        m_keyframes[m_curr_keyframe_index + 1].orientation,
-//                        t
-//                    );
-
-//            QVector3D curr_pos = -m_keyframes[m_curr_keyframe_index].position;
-//            QVector3D next_pos = -m_keyframes[m_curr_keyframe_index + 1].position;
-//            QVector3D slerp_pos = curr_pos + t * (next_pos - curr_pos);
-
-//            m_keyframe_transform.rotate(slerp);
-//            m_keyframe_transform.translate(slerp_pos);
-//            m_mesh.draw(m_program, m_proj * m_keyframe_transform * m_world * m_camera, m_mvMatrixLoc, m_vPosition, m_vColor);
-//        } else {
-//          printf("XXXX\n");
-//        }
-//    } else {
-        if(m_i >= m_keyframes.size()){
-            m_i = 0;
-        }
-        m_keyframe_transform.translate(-m_keyframes[m_i].position);
-        m_keyframe_transform.rotate(m_keyframes[m_i].orientation);
-        m_mesh.draw(m_program, m_proj * m_keyframe_transform * m_world * m_camera, m_mvMatrixLoc, m_vPosition, m_vColor);
-//    }
+    m_mesh.draw(m_program, m_proj * m_worldRotation * m_camera * m_worldTranslation, m_mvMatrixLoc, m_vPosition, m_vColor);
 }
 
 void MyGLWidget::draw_background() {
-//    if(m_curr_image_index < m_image_data.size()){
-//        std::string s = m_image_dir + "/" + m_image_data[m_curr_image_index].first;
-//        bg_tex = png_texture_load(s.c_str());
-//        m_timer->stop();
-//        delete m_timer;
-//        m_timer =new QTimer(this);
-//        connect(m_timer, SIGNAL(timeout()), this, SLOT(update()));
-//        double time_next = m_image_data[m_curr_image_index+1].second - m_image_data[m_curr_image_index].second;
-//        m_curr_image_index++;
-//        if (time_next < 0)
-//            printf("SS");
-//        m_timer->start(int(m_simulation_time_ms * time_next));
-//    } else {
-//        m_curr_image_index = 0;
-//        m_curr_keyframe_index = 0;
-//        m_mode = ADJUST_MESH;
-//        m_timer->stop();
-//        return;
-//    }
-
-    m_ij = get_image_index(std::max(m_ij-1,0), m_keyframes[m_i].timestamp);
-    if(m_ij != -1 and m_ij != -2){
-        std::string s = m_image_dir + "/" + m_image_data[m_ij].first;
+    if(m_curr_image_index < m_image_data.size()){
+        std::string s = m_image_dir + "/" + m_image_data[m_curr_image_index].first;
         bg_tex = png_texture_load(s.c_str());
-        printf("SOMETHING RIGHT %d %d\n", m_ij, m_i);
+        m_timer->stop();
+        delete m_timer;
+        m_timer =new QTimer(this);
+        connect(m_timer, SIGNAL(timeout()), this, SLOT(update()));
+        double time_next = m_image_data[m_curr_image_index+1].second - m_image_data[m_curr_image_index].second;
+        m_curr_image_index++;
+        m_timer->start(int(m_simulation_time_ms * std::max(time_next,0)));
     } else {
-        printf("SOMETHING WRONG %d %d\n", m_ij, m_i);
+        m_curr_image_index = 0;
+        m_curr_keyframe_index = 0;
+        m_i = 0;
+        m_mode = ADJUST_MESH;
+        m_timer->stop();
         return;
     }
+
+//    m_ij = get_image_index(std::max(m_ij-1,0), m_keyframes[m_i].timestamp);
+//    if(m_ij != -1 and m_ij != -2){
+//        std::string s = m_image_dir + "/" + m_image_data[m_ij].first;
+//        bg_tex = png_texture_load(s.c_str());
+//        printf("SOMETHING RIGHT %d %d\n", m_ij, m_i);
+//    } else {
+//        printf("SOMETHING WRONG %d %d\n", m_ij, m_i);
+//        return;
+//    }
 
     glDisable(GL_DEPTH_TEST);
     m_program->setUniformValue(m_uIs_tp, 1);
@@ -350,10 +358,7 @@ void MyGLWidget::fill_image_data(std::string image_dir, std::string image_info_c
 }
 
 void MyGLWidget::draw_scene() {
-    m_keyframe_transform.setToIdentity();
-    m_keyframe_transform.translate(-m_keyframes[m_i].position);
-    m_keyframe_transform.rotate(m_keyframes[m_i].orientation);
-    m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_keyframe_transform * m_world * m_camera);
+    m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_worldRotation * m_camera * m_worldTranslation);
     m_scene_vbo.bind();
     glBufferData (GL_ARRAY_BUFFER, m_scene_points.size() * sizeof(Point), &m_scene_points[0], GL_STATIC_DRAW);
 
@@ -444,7 +449,7 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode,  std::string in
         m_lastPos = event->pos();
     } else {
         QVector3D corner1 = QVector3D(m_lastPos.x(), m_lastPos.y(), 0);
-        QMatrix4x4 transform = m_world * m_camera;
+        QMatrix4x4 transform = m_worldRotation * m_camera * m_worldTranslation;
         if (insert_mode == "ADD_PLANE") { // Show selected points
             for (int i = 0; i < m_scene_points.size(); i++) {
                 if (between_corners(m_proj * transform, m_scene_points[i].position, corner1, QVector3D(event->x(), event->y(), 0))) {
@@ -617,7 +622,7 @@ void MyGLWidget::adjust_planes() {
 
 void MyGLWidget::adjust_mesh(){
     if(m_mesh_point_selected and m_snap_plane != -1){
-        QMatrix4x4 transform = m_world * m_camera;
+        QMatrix4x4 transform = m_worldRotation * m_camera * m_worldTranslation;
         m_mesh.adjust(m_planes[m_snap_plane].get_selected_point(), transform, transform);
     }
     if(m_snap_plane != -1)

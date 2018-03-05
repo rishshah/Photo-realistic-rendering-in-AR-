@@ -16,8 +16,8 @@
 
 #define START_X 10
 #define START_Y 10
-#define SIZE_X 460
-#define SIZE_Y 460
+#define SIZE_X 760
+#define SIZE_Y 520
 
 #include <QtOpenGL/QGLFunctions>
 #include <QtWidgets/QOpenGLWidget>
