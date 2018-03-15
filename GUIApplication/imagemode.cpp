@@ -36,19 +36,29 @@ void ImageMode::on_image_csv_button_clicked()
     ui->image_csv_label->setText(imageInfoCSV);
 }
 
+void ImageMode::on_cam_settings_button_clicked()
+{
+    QString camSettings = QFileDialog::getOpenFileName(this, tr("Choose Settings file for Camera"), "", tr("All files (*.*)"));
+    ui->cam_settings_label->setText(camSettings);
+}
+
 void ImageMode::on_run_pushButton_clicked()
 {
     std::string imageDirectory = ui->image_dir_label->text().toUtf8().constData();
     std::string imageCSV = ui->image_csv_label->text().toUtf8().constData();
+    std::string camSettings = ui->cam_settings_label->text().toUtf8().constData();
     imageDirectory = BASE_DIR "V1_01_easy/mav0/cam0/data";
     imageCSV  = BASE_DIR "V1_01_easy/mav0/cam0/data.csv";
-//    if (imageDirectory == "-" or imageCSV == "-"){
+    camSettings  = BASE_DIR "ORB_SLAM2/Examples/Monocular/EuRoC.yaml";
+
+//    if (imageDirectory == "-" or imageCSV == "-" or camSettings == "-"){
 //        QMessageBox::critical(this,"Error","Choose both files before run");
 //        return;
 //    }
 //    putenv("LD_LIBRARY_PATH=" LD_LIBRARY_PATH);
 //    chdir(BASE_DIR);
-//    std::string s= "./test " VOCABULARY " " CAM_SETTING;
+//    std::string s= "./test " VOCABULARY " ";
+//    s += camSettings;
 //    s += " ";
 //    s += imageDirectory;
 //    s += " ";
@@ -56,10 +66,12 @@ void ImageMode::on_run_pushButton_clicked()
 //    int res = std::system(s.c_str());
 //    if(res == 0){
         hide();
-        OpenGLWindow o(this, imageDirectory, imageCSV);
+        OpenGLWindow o(this, imageDirectory, imageCSV, camSettings);
         o.setModal(true);
         o.exec();
 //    } else {
 //        QMessageBox::critical(this,"Error","One or more of files chosen incorrect");
 //    }
 }
+
+

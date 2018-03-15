@@ -44,6 +44,12 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - In progress matching video to exact keyframes (Some interference and non stable mapping)
 - Produce images for webcam
 
+- Read settings file
+- Copy the projection matrix
+- Include opencv, convert to/from matrices the images
+- Undistort the image texture
+
+
 ## Plan
 - Some storage of planes (later)
 - Render it and superimpose on the video and playback

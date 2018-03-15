@@ -4,6 +4,7 @@
 #include <chrono>
 #include <opencv2/core/core.hpp>
 #include <System.h>
+#include <MapPoint.h>
 
 using namespace std;
 
@@ -22,7 +23,7 @@ const vector<string> explode(const string& s, const char& c) {
 }
 
 
-double f(int i){
+double f(int i) {
     return i / 1000.0;
 }
 void LoadImages(const string &strImagePath, const string &strPathTimes,
@@ -48,7 +49,7 @@ void LoadImages(const string &strImagePath, const string &strPathTimes,
     }
 }
 
-int image_mode(char **argv) {
+int image_mode(char **argv, std::ofstream& file) {
     // Retrieve paths to images
     vector<string> vstrImageFilenames;
     vector<double> vTimestamps;
@@ -87,7 +88,26 @@ int image_mode(char **argv) {
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
         // Pass the image to the SLAM system
-        SLAM.TrackMonocular(im, tframe);
+        cv::Mat out = SLAM.TrackMonocular(im, tframe);
+        // std::vector<ORB_SLAM2::MapPoint*> vMPs = SLAM.GetTrackedMapPoints();
+        // std::vector<cv::KeyPoint> vKeys = SLAM.GetTrackedKeyPointsUn();
+        // for (int i = 0; i < vMPs.size(); ++i) {
+        //     if(vMPs[i] != NULL){
+        //         std::cout << vMPs[i]->GetWorldPos() << std::endl;
+        //         if(vMPs[i]->GetReferenceKeyFrame() != NULL)
+        //             std::cout << vMPs[i]->GetReferenceKeyFrame()->GetPose() << std::endl;
+        //     }
+        // }
+        // std::cout << "$$$$$$" << std::endl;
+        // // for (int i = 0; i < vKeys.size(); ++i) {
+        // //     std::cout << vKeys[i] << std::endl;
+        // // }
+
+        if (!out.empty())
+            file << " " << out << std::endl;
+        else
+            file << " -" << std::endl;
+
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 
         double ttrack = std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
@@ -123,7 +143,7 @@ int image_mode(char **argv) {
     return 0;
 }
 
-int webcam_mode(char **argv) {
+int webcam_mode(char **argv, std::ofstream& file) {
 
     int nImages = 1000;
 
@@ -135,7 +155,7 @@ int webcam_mode(char **argv) {
     vTimesTrack.resize(nImages);
 
     cv::VideoCapture cap;
-    if(!cap.open(0))
+    if (!cap.open(0))
         return 1;
     cv::Mat im;
     for (int ni = 0; ni < nImages; ni++) {
@@ -146,7 +166,12 @@ int webcam_mode(char **argv) {
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 
         // Pass the image to the SLAM system
-        SLAM.TrackMonocular(im, tframe);
+        cv::Mat out = SLAM.TrackMonocular(im, tframe);
+        if (!out.empty())
+            file << " " << out << std::endl;
+        else
+            file << " -" << std::endl;
+
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 
         double ttrack = std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
@@ -182,6 +207,7 @@ int webcam_mode(char **argv) {
     return 0;
 }
 
+
 int main(int argc, char **argv) {
     if (argc != 5 and argc != 3) {
         cerr << argv[0] << endl;
@@ -190,12 +216,19 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    ofstream file;
+    string affine_file = "RT.txt";
+    file.open(affine_file.c_str());
+    file << fixed;
+
     int ret = -1;
     if (argc == 5) {
-        ret = image_mode(argv);
+        ret = image_mode(argv, file);
     } else {
-        ret = webcam_mode(argv);
+        ret = webcam_mode(argv, file);
     }
+    file.close();
+
     if (ret != 0) {
         cout << "ERROR" << endl;
     }

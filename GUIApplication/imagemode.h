@@ -22,6 +22,8 @@ private slots:
 
     void on_run_pushButton_clicked();
 
+    void on_cam_settings_button_clicked();
+
 private:
     Ui::ImageMode *ui;
 };

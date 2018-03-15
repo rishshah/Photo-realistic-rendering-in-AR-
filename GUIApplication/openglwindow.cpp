@@ -3,12 +3,12 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-OpenGLWindow::OpenGLWindow(QWidget *parent, std::string image_dir, std::string image_info_csv) :
+OpenGLWindow::OpenGLWindow(QWidget *parent, std::string image_dir, std::string image_info_csv, std::string settings) :
     QDialog(parent),
     ui(new Ui::OpenGLWindow)
 {
     ui->setupUi(this);
-    ui->openGLWidget->fill_image_data(image_dir, image_info_csv);
+    ui->openGLWidget->fill_image_data(image_dir, image_info_csv, settings);
     ui->pan_radioButton->setChecked(true);
     ui->radioButton_add->setChecked(true);
     ui->pushButton_playback->setVisible(false);

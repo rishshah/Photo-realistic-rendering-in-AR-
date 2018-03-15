@@ -12,7 +12,7 @@ class OpenGLWindow : public QDialog
 {
     Q_OBJECT
 public:
-    explicit OpenGLWindow(QWidget *parent, std::string  dir, std::string file);
+    explicit OpenGLWindow(QWidget *parent, std::string  dir, std::string file, std::string settings);
     ~OpenGLWindow();
 
 protected:

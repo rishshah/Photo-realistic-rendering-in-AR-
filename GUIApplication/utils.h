@@ -13,11 +13,12 @@
 
 #define SLAM_POINTS_FILEPATH BASE_DIR "abc.txt"
 #define SLAM_KFS_FILEPATH BASE_DIR "KeyFrameTrajectory.txt"
+#define SLAM_RT_MTX_FILEPATH BASE_DIR "RT.txt"
 
 #define START_X 10
 #define START_Y 10
-#define SIZE_X 760
-#define SIZE_Y 520
+#define SIZE_X 752
+#define SIZE_Y 480
 
 #include <QtOpenGL/QGLFunctions>
 #include <QtWidgets/QOpenGLWidget>
@@ -34,6 +35,10 @@
 #define DEBUG 4
 
 #include <stdio.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 #include <Eigen/Dense>
 #include <cmath>
 #include <QVector3D>
@@ -55,6 +60,8 @@ bool between_corners(QMatrix4x4 transform, QVector3D point, QVector3D c1, QVecto
 QVector3D pointOnPlane(QVector3D point, QVector3D plane);
 
 GLuint png_texture_load(const char * file_name);
+
+GLuint distorted_texture_load(cv::Mat img);
 
 GLuint LoadTexture(const char* filename, int width, int height);
 

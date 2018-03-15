@@ -42,7 +42,7 @@ void MainWindow::on_continue_pushbutton_clicked()
         std::string image_csv = BASE_DIR "image_info.csv";
         if (result == 0){
             hide();
-            OpenGLWindow o(this,image_dir, image_csv);
+            OpenGLWindow o(this,image_dir, image_csv, CAM_SETTING);
             o.setModal(true);
             o.exec();
         } else {

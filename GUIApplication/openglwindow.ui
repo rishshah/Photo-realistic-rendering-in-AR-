@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>962</width>
-    <height>540</height>
+    <height>501</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,8 +18,8 @@
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>760</width>
-     <height>520</height>
+     <width>752</width>
+     <height>480</height>
     </rect>
    </property>
   </widget>
@@ -42,10 +42,10 @@
      <x>790</x>
      <y>69</y>
      <width>141</width>
-     <height>51</height>
+     <height>54</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_mode">
     <item>
      <widget class="QRadioButton" name="pan_radioButton">
       <property name="text">
@@ -110,7 +110,7 @@
      <height>121</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QVBoxLayout" name="verticalLayout_action">
     <item>
      <widget class="QRadioButton" name="radioButton_add">
       <property name="text">

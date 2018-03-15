@@ -19,9 +19,9 @@
 #include "point.h"
 #include "utils.h"
 
-#define DX 0.1
-#define DY 0.1
-#define DZ 0.1
+#define DX 0.01
+#define DY 0.01
+#define DZ 0.01
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
@@ -32,6 +32,30 @@ struct Keyframe{
     Keyframe(){}
     Keyframe(double t, QVector3D pos, QQuaternion q):
         timestamp(t), position(pos), orientation(q){}
+};
+
+class Camera{
+    float m_fx, m_fy;
+    float m_cx, m_cy;
+    float m_k1, m_k2, m_p1, m_p2;
+    float m_near, m_far;
+
+public:
+    Camera(){
+        m_fx = m_fy = 0;
+        m_k1 = m_k2 = m_p1 = m_p2 = 0;
+        m_cx = m_cy = 0;
+        m_near = 0.01f;
+        m_far = 10000.0f;
+    }
+    Camera(float fx, float fy, float cx, float cy):m_fx(fx), m_fy(fy), m_cx(cx), m_cy(cy), m_near(0.001), m_far(10000.0){}
+    void set_distortion(float k1, float k2, float p1, float p2){
+        m_k1 = k1; m_k2 = k2;
+        m_p1 = p1; m_p2 = p2;
+    }
+    cv::Mat get_cam_parameter();
+    cv::Mat get_cam_distortion();
+    QMatrix4x4 getProjectionTransform(int w, int h);
 };
 
 class MyGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -46,7 +70,7 @@ public:
     QSize sizeHint() const Q_DECL_OVERRIDE;
 
     // Images input at start
-    void fill_image_data(std::string dir, std::string csv);
+    void fill_image_data(std::string dir, std::string csv, std::string settings);
 
     // Input Events
     void mousePress(QMouseEvent *event);
@@ -96,10 +120,11 @@ private:
     void adjustWorldRotationTransform();
     void adjustWorldTranslationTransform();
     void adjustCameraTransform();
+    void adjustProjectionTransform(int w, int h);
 
-    int m_xRot; float m_xPos;
-    int m_yRot; float m_yPos;
-    int m_zRot; float m_zPos;
+
+    float m_xPos, m_yPos, m_zPos;
+    int m_xRot, m_yRot, m_zRot;
     int m_mode;
 
     int m_i, m_ij;
@@ -112,6 +137,8 @@ private:
     bool m_mesh_point_selected;
 
     QPoint m_lastPos;
+
+    Camera *m_cam;
 
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer m_scene_vbo, m_bg_vbo;
@@ -128,6 +155,7 @@ private:
     QMatrix4x4 m_camera;
 
     std::vector<std::pair<std::string, double> > m_image_data;
+    std::vector<QMatrix4x4> m_image_rt;
     std::vector<Keyframe> m_keyframes;
     std::string m_image_dir;
     QTimer *m_timer;
