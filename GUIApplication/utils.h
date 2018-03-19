@@ -32,14 +32,14 @@
 #define ADJUST_MESH 1
 #define ADJUST_INITIAL_FRAME 2
 #define PLAYBACK 3
-#define DEBUG 4
+#define ONLINE 4
 
 #include <stdio.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include <cmath>
 #include <QVector3D>
 #include <QVector>
@@ -56,6 +56,8 @@ bool close_enough(QVector3D point, QVector3D plane, double error_limit);
 bool good_enough(QVector<QVector3D> points, int good_num_points);
 
 bool between_corners(QMatrix4x4 transform, QVector3D point, QVector3D c1, QVector3D c2);
+
+QMatrix4x4 convert2QMat(cv::Mat x);
 
 QVector3D pointOnPlane(QVector3D point, QVector3D plane);
 

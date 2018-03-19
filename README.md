@@ -43,11 +43,20 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - Snap mesh to plane
 - In progress matching video to exact keyframes (Some interference and non stable mapping)
 - Produce images for webcam
-
 - Read settings file
 - Copy the projection matrix
 - Include opencv, convert to/from matrices the images
 - Undistort the image texture
+
+- Copy Files for AR demo in QT
+- Play the whole thing using images from given data
+- Remove ROS dependencies
+- Make sure if works correctly ( No more green dots )
+- Merge the code into glwidget
+
+
+- GLWidget PLAYBACK -> call continuously TrackMonocular{ inp -> image , output -> points, matrix }
+- Use this info to draw both background and mesh and already present planes
 
 
 ## Plan

@@ -1,6 +1,7 @@
 #ifndef MYGLWIDGET_H
 #define MYGLWIDGET_H
 
+#include <../ORB_SLAM2/include/System.h>
 #include <QtOpenGL/QGLFunctions>
 #include <QtWidgets/QOpenGLWidget>
 #include <QtGui/QOpenGLVertexArrayObject>
@@ -18,6 +19,7 @@
 #include "mesh.h"
 #include "point.h"
 #include "utils.h"
+#include "camera.h"
 
 #define DX 0.01
 #define DY 0.01
@@ -32,30 +34,6 @@ struct Keyframe{
     Keyframe(){}
     Keyframe(double t, QVector3D pos, QQuaternion q):
         timestamp(t), position(pos), orientation(q){}
-};
-
-class Camera{
-    float m_fx, m_fy;
-    float m_cx, m_cy;
-    float m_k1, m_k2, m_p1, m_p2;
-    float m_near, m_far;
-
-public:
-    Camera(){
-        m_fx = m_fy = 0;
-        m_k1 = m_k2 = m_p1 = m_p2 = 0;
-        m_cx = m_cy = 0;
-        m_near = 0.01f;
-        m_far = 10000.0f;
-    }
-    Camera(float fx, float fy, float cx, float cy):m_fx(fx), m_fy(fy), m_cx(cx), m_cy(cy), m_near(0.001), m_far(10000.0){}
-    void set_distortion(float k1, float k2, float p1, float p2){
-        m_k1 = k1; m_k2 = k2;
-        m_p1 = p1; m_p2 = p2;
-    }
-    cv::Mat get_cam_parameter();
-    cv::Mat get_cam_distortion();
-    QMatrix4x4 getProjectionTransform(int w, int h);
 };
 
 class MyGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -85,6 +63,7 @@ public:
 
     // Playback Click
     void playback();
+    void online();
 
     // Add Mesh click
     void input_mesh(std::string f);
@@ -116,6 +95,7 @@ private:
     void draw_mesh();
     void draw_planes();
     void draw_background();
+    void draw_background_online();
 
     void adjustWorldRotationTransform();
     void adjustWorldTranslationTransform();
@@ -153,6 +133,8 @@ private:
     QMatrix4x4 m_worldTranslation;
     QMatrix4x4 m_worldRotation;
     QMatrix4x4 m_camera;
+
+    ORB_SLAM2::System* m_slam;
 
     std::vector<std::pair<std::string, double> > m_image_data;
     std::vector<QMatrix4x4> m_image_rt;

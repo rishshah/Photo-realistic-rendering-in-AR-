@@ -49,7 +49,7 @@ void LoadImages(const string &strImagePath, const string &strPathTimes,
     }
 }
 
-int image_mode(char **argv, std::ofstream& file) {
+int image_mode(char **argv) {
     // Retrieve paths to images
     vector<string> vstrImageFilenames;
     vector<double> vTimestamps;
@@ -89,24 +89,6 @@ int image_mode(char **argv, std::ofstream& file) {
 
         // Pass the image to the SLAM system
         cv::Mat out = SLAM.TrackMonocular(im, tframe);
-        // std::vector<ORB_SLAM2::MapPoint*> vMPs = SLAM.GetTrackedMapPoints();
-        // std::vector<cv::KeyPoint> vKeys = SLAM.GetTrackedKeyPointsUn();
-        // for (int i = 0; i < vMPs.size(); ++i) {
-        //     if(vMPs[i] != NULL){
-        //         std::cout << vMPs[i]->GetWorldPos() << std::endl;
-        //         if(vMPs[i]->GetReferenceKeyFrame() != NULL)
-        //             std::cout << vMPs[i]->GetReferenceKeyFrame()->GetPose() << std::endl;
-        //     }
-        // }
-        // std::cout << "$$$$$$" << std::endl;
-        // // for (int i = 0; i < vKeys.size(); ++i) {
-        // //     std::cout << vKeys[i] << std::endl;
-        // // }
-
-        if (!out.empty())
-            file << " " << out << std::endl;
-        else
-            file << " -" << std::endl;
 
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 
@@ -143,7 +125,7 @@ int image_mode(char **argv, std::ofstream& file) {
     return 0;
 }
 
-int webcam_mode(char **argv, std::ofstream& file) {
+int webcam_mode(char **argv) {
 
     int nImages = 1000;
 
@@ -164,13 +146,9 @@ int webcam_mode(char **argv, std::ofstream& file) {
         double tframe = f(ni);
 
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-
+        
         // Pass the image to the SLAM system
         cv::Mat out = SLAM.TrackMonocular(im, tframe);
-        if (!out.empty())
-            file << " " << out << std::endl;
-        else
-            file << " -" << std::endl;
 
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 
@@ -216,18 +194,12 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    ofstream file;
-    string affine_file = "RT.txt";
-    file.open(affine_file.c_str());
-    file << fixed;
-
     int ret = -1;
     if (argc == 5) {
-        ret = image_mode(argv, file);
+        ret = image_mode(argv);
     } else {
-        ret = webcam_mode(argv, file);
+        ret = webcam_mode(argv);
     }
-    file.close();
 
     if (ret != 0) {
         cout << "ERROR" << endl;

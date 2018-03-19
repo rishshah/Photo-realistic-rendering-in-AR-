@@ -19,6 +19,27 @@ double dist2plane(QVector3D point, QVector3D plane){
     return num/den;
 }
 
+QMatrix4x4 convert2QMat(cv::Mat x){
+    QMatrix4x4 out;
+    out.setToIdentity();
+    if (!x.empty()){
+        for(int i=0;i<4;i++){
+            out.setRow(i, QVector4D(x.at<float>(i,0), x.at<float>(i,1), x.at<float>(i,2), x.at<float>(i,3)));
+        }
+//        cv::Mat Rwc = x.rowRange(0,3).colRange(0,3).t();
+//        cv::Mat twc = -Rwc*x.rowRange(0,3).col(3);
+//        for(int i=0;i<2;i++){
+//            out.setColumn(i, QVector4D(Rwc.at<float>(0,i), Rwc.at<float>(1,i), Rwc.at<float>(2,i), Rwc.at<float>(3,i)));
+//        }
+//        out.setColumn(3, QVector4D(twc.at<float>(0), twc.at<float>(1), twc.at<float>(2), 1));
+
+        std::cout << x << std::endl;
+    } else {
+        std::cout << "XXXX" << std::endl;
+    }
+    return out;
+}
+
 void fit_plane(QVector<QVector3D> points, QVector3D& maybe_model, double& error){
     int num_points = points.size();
 

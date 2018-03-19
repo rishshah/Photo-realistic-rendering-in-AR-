@@ -70,7 +70,8 @@ void OpenGLWindow::on_pushButton_add_mesh_clicked()
 }
 
 void OpenGLWindow::on_pushButton_playback_clicked(){
-   ui->openGLWidget->playback();
+//   ui->openGLWidget->playback();
+    ui->openGLWidget->online();
 }
 
 void OpenGLWindow::on_pushButton_exit_clicked(){
