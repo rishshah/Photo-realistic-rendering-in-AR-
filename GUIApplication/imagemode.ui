@@ -6,71 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>530</width>
+    <height>359</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QPushButton" name="image_dir_button">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>60</y>
-     <width>171</width>
-     <height>23</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Choose Image Directory</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="image_csv_button">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>120</y>
-     <width>171</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Choose ImageInfo CSV</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="image_dir_label">
-   <property name="geometry">
-    <rect>
-     <x>48</x>
-     <y>90</y>
-     <width>331</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>-</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="image_csv_label">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>150</y>
-     <width>331</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>-</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="run_pushButton">
    <property name="geometry">
     <rect>
-     <x>180</x>
-     <y>250</y>
-     <width>80</width>
+     <x>169</x>
+     <y>310</y>
+     <width>171</width>
      <height>23</height>
     </rect>
    </property>
@@ -78,32 +26,112 @@
     <string>Run</string>
    </property>
   </widget>
-  <widget class="QLabel" name="cam_settings_label">
+  <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>210</y>
-     <width>331</width>
-     <height>21</height>
+     <x>30</x>
+     <y>20</y>
+     <width>451</width>
+     <height>271</height>
     </rect>
    </property>
-   <property name="text">
-    <string>-</string>
-   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QPushButton" name="image_csv_button">
+        <property name="text">
+         <string>Choose ImageInfo CSV</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="image_csv_label">
+        <property name="text">
+         <string>NA</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <widget class="QPushButton" name="map_points_button">
+        <property name="text">
+         <string>Choose Map Points </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="map_points_label">
+        <property name="text">
+         <string>NA</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QPushButton" name="image_dir_button">
+        <property name="text">
+         <string>Choose Image Directory</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="image_dir_label">
+        <property name="text">
+         <string>NA</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QPushButton" name="cam_settings_button">
+        <property name="text">
+         <string>Choose Camera Setting</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="cam_settings_label">
+        <property name="text">
+         <string>NA</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
-  <widget class="QPushButton" name="cam_settings_button">
-   <property name="geometry">
-    <rect>
-     <x>50</x>
-     <y>180</y>
-     <width>171</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Choose Camera Settings</string>
-   </property>
-  </widget>
+  <zorder>image_dir_button</zorder>
+  <zorder>image_csv_button</zorder>
+  <zorder>image_dir_label</zorder>
+  <zorder>image_csv_label</zorder>
+  <zorder>run_pushButton</zorder>
+  <zorder>cam_settings_button</zorder>
+  <zorder></zorder>
+  <zorder>map_points_button</zorder>
+  <zorder>map_points_label</zorder>
+  <zorder>cam_settings_label</zorder>
  </widget>
  <resources/>
  <connections/>

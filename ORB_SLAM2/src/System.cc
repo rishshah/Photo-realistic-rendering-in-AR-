@@ -427,12 +427,19 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     f << fixed;
     cout << endl << "Saving map to " << map_file << " ..." << endl;
 
+
+    ofstream nf;
+    string map_desc_file = "abc.desc";
+    nf.open(map_desc_file.c_str());
+    nf << fixed;
+
     for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
     {
         if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
             continue;
         cv::Mat pos = vpMPs[i]->GetWorldPos();
         f << pos.at<float>(0) << " " << pos.at<float>(1) << " " << pos.at<float>(2) << endl;
+        nf << vpMPs[i]->GetDescriptor() << endl;
     }
 
     for(set<MapPoint*>::iterator sit=spRefMPs.begin(), send=spRefMPs.end(); sit!=send; sit++)
@@ -441,8 +448,10 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
             continue;
         cv::Mat pos = (*sit)->GetWorldPos();
         f << pos.at<float>(0) << " " << pos.at<float>(1) << " " << pos.at<float>(2)  << endl;
+        nf << (*sit)->GetDescriptor() << endl;
     }
 
+    nf.close();
     f.close();
 }
 

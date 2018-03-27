@@ -3,26 +3,52 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-OpenGLWindow::OpenGLWindow(QWidget *parent, std::string image_dir, std::string image_info_csv, std::string settings) :
+OpenGLWindow::OpenGLWindow(QWidget *parent, std::string camSettings):
     QDialog(parent),
-    ui(new Ui::OpenGLWindow)
-{
+    ui(new Ui::OpenGLWindow){
     ui->setupUi(this);
-    ui->openGLWidget->fill_image_data(image_dir, image_info_csv, settings);
+    ui->openGLWidget->fill_image_data(camSettings);
+    initializeUI();
+}
+
+OpenGLWindow::OpenGLWindow(QWidget *parent, std::string camSettings, std::string mapPoints):
+    QDialog(parent),
+    ui(new Ui::OpenGLWindow){
+    ui->setupUi(this);
+    ui->openGLWidget->fill_image_data(camSettings, mapPoints);
+    initializeUI();
+}
+
+
+OpenGLWindow::OpenGLWindow(QWidget *parent, std::string camSettings, std::string imageDirectory, std::string imageCSV):
+    QDialog(parent),
+    ui(new Ui::OpenGLWindow){
+    ui->setupUi(this);
+    ui->openGLWidget->fill_image_data(camSettings, imageDirectory, imageCSV);
+    initializeUI();
+}
+
+
+
+OpenGLWindow::OpenGLWindow(QWidget *parent, std::string camSettings, std::string imageDirectory, std::string imageCSV, std::string mapPoints):
+    QDialog(parent),
+    ui(new Ui::OpenGLWindow){
+    ui->setupUi(this);
+    ui->openGLWidget->fill_image_data(camSettings, imageDirectory, imageCSV, mapPoints);
+    initializeUI();
+}
+
+void OpenGLWindow::initializeUI(){
     ui->pan_radioButton->setChecked(true);
     ui->radioButton_add->setChecked(true);
     ui->pushButton_playback->setVisible(false);
 }
 
-
-
-OpenGLWindow::~OpenGLWindow()
-{
+OpenGLWindow::~OpenGLWindow(){
     delete ui;
 }
 
-void OpenGLWindow::mousePressEvent(QMouseEvent *event)
-{
+void OpenGLWindow::mousePressEvent(QMouseEvent *event){
   ui->openGLWidget->mousePress(event);
 }
 
@@ -70,8 +96,7 @@ void OpenGLWindow::on_pushButton_add_mesh_clicked()
 }
 
 void OpenGLWindow::on_pushButton_playback_clicked(){
-//   ui->openGLWidget->playback();
-    ui->openGLWidget->online();
+   ui->openGLWidget->playback();
 }
 
 void OpenGLWindow::on_pushButton_exit_clicked(){

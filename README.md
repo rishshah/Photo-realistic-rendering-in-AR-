@@ -31,32 +31,39 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - Fitting a plane to those points
 - Multiple plane selection
 - Input and render meshes
-- Load texture from png
 - Select(Snap to) plane for removal
 - Display texture
 - Translation in PAN MODE
 - Bringing input mesh to front
 - Rendering input mesh from camera 
 - Plane display nicely (bounded)
-
 - Resizing feature in input mesh through object file
 - Snap mesh to plane
-- In progress matching video to exact keyframes (Some interference and non stable mapping)
-- Produce images for webcam
 - Read settings file
 - Copy the projection matrix
 - Include opencv, convert to/from matrices the images
 - Undistort the image texture
-
-- Copy Files for AR demo in QT
-- Play the whole thing using images from given data
-- Remove ROS dependencies
-- Make sure if works correctly ( No more green dots )
-- Merge the code into glwidget
-
-
+- Use every frame pose for augemtation
 - GLWidget PLAYBACK -> call continuously TrackMonocular{ inp -> image , output -> points, matrix }
 - Use this info to draw both background and mesh and already present planes
+- store keypoint descriptors and planes.
+- find the matching algorithm 
+- change UI 
+
+- how to use matched descriptors?
+- read papers
+
+- save web_cam images
+- modify file paths
+- create a direct map load and playback (OPTIONAL)
+
+
+-- Mode 1
+- on a video (images/ webcam) if descriptor match -> render plane + mesh (HARD)
+
+-- Mode 2
+- capture video (images/ webcam) scan and store descriptors (MEDIUM)
+- show the map, take input planes, save them (EASY)
 
 
 ## Plan

@@ -12,6 +12,7 @@
 #define CAM_SETTING BASE_DIR "ORB_SLAM2/Examples/Monocular/EuRoC.yaml"
 
 #define SLAM_POINTS_FILEPATH BASE_DIR "abc.txt"
+#define SLAM_POINTS_DESC_FILEPATH BASE_DIR "abc.desc"
 #define SLAM_KFS_FILEPATH BASE_DIR "KeyFrameTrajectory.txt"
 #define SLAM_RT_MTX_FILEPATH BASE_DIR "RT.txt"
 
@@ -25,14 +26,20 @@
 #include <QtGui/QOpenGLVertexArrayObject>
 #include <QtGui/QOpenGLBuffer>
 #include <QtGui/QOpenGLShaderProgram>
+#include "point.h"
 
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
 #define ADJUST_SCENE 0
 #define ADJUST_MESH 1
-#define ADJUST_INITIAL_FRAME 2
-#define PLAYBACK 3
-#define ONLINE 4
+#define PLAYBACK 2
+#define PLAY_FIRST 3
+#define MATCH 4
+
+#define ONLINE_IMAGES 0
+#define ONLINE_WEBCAM 1
+#define OFFLINE_IMAGES 2
+#define OFFLINE_WEBCAM 3
 
 #include <stdio.h>
 #include <opencv2/core/core.hpp>
@@ -63,7 +70,7 @@ QVector3D pointOnPlane(QVector3D point, QVector3D plane);
 
 GLuint png_texture_load(const char * file_name);
 
-GLuint distorted_texture_load(cv::Mat img);
+GLuint distorted_texture_load(cv::Mat img, bool grayscale);
 
 GLuint LoadTexture(const char* filename, int width, int height);
 

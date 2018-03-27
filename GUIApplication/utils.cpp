@@ -26,16 +26,9 @@ QMatrix4x4 convert2QMat(cv::Mat x){
         for(int i=0;i<4;i++){
             out.setRow(i, QVector4D(x.at<float>(i,0), x.at<float>(i,1), x.at<float>(i,2), x.at<float>(i,3)));
         }
-//        cv::Mat Rwc = x.rowRange(0,3).colRange(0,3).t();
-//        cv::Mat twc = -Rwc*x.rowRange(0,3).col(3);
-//        for(int i=0;i<2;i++){
-//            out.setColumn(i, QVector4D(Rwc.at<float>(0,i), Rwc.at<float>(1,i), Rwc.at<float>(2,i), Rwc.at<float>(3,i)));
-//        }
-//        out.setColumn(3, QVector4D(twc.at<float>(0), twc.at<float>(1), twc.at<float>(2), 1));
-
-        std::cout << x << std::endl;
+//        printf("YYYYY\n");
     } else {
-        std::cout << "XXXX" << std::endl;
+//        printf("XXXXX\n");
     }
     return out;
 }
@@ -270,7 +263,7 @@ GLuint png_texture_load(const char * file_name)
     return texture;
 }
 
-GLuint distorted_texture_load(cv::Mat img){
+GLuint distorted_texture_load(cv::Mat img, bool grayscale){
     GLuint textureTrash;
     cv::flip(img, img, 0);
     glGenTextures(1, &textureTrash);
@@ -283,14 +276,19 @@ GLuint distorted_texture_load(cv::Mat img){
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-
+    GLint format, internal_format;
+    if(grayscale){
+        format = internal_format = GL_RED;
+    } else {
+        format = internal_format = GL_RGB;
+    }
     glTexImage2D(GL_TEXTURE_2D,     // Type of texture
                  0,                 // Pyramid level (for mip-mapping) - 0 is the top level
-                 GL_RED,            // Internal colour format to convert to
+                 internal_format,            // Internal colour format to convert to
                  img.cols,          // Image width  i.e. 640 for Kinect in standard mode
                  img.rows,          // Image height i.e. 480 for Kinect in standard mode
                  0,                 // Border width in pixels (can either be 1 or 0)
-                 GL_RED, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
+                 format, // Input image format (i.e. GL_RGB, GL_RGBA, GL_BGR etc.)
                  GL_UNSIGNED_BYTE,  // Image data type
                  img.ptr());        // The actual image data itself
 

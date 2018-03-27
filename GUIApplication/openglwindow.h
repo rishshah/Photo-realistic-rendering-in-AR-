@@ -12,7 +12,10 @@ class OpenGLWindow : public QDialog
 {
     Q_OBJECT
 public:
-    explicit OpenGLWindow(QWidget *parent, std::string  dir, std::string file, std::string settings);
+    explicit OpenGLWindow(QWidget *parent, std::string  camSettings);
+    explicit OpenGLWindow(QWidget *parent, std::string  camSettings, std::string mapPoints);
+    explicit OpenGLWindow(QWidget *parent, std::string  camSettings, std::string imageDirectory, std::string imageCSV);
+    explicit OpenGLWindow(QWidget *parent, std::string  camSettings, std::string imageDirectory, std::string imageCSV, std::string mapPoints);
     ~OpenGLWindow();
 
 protected:
@@ -31,6 +34,7 @@ private slots:
 
 private:
     Ui::OpenGLWindow *ui;
+    void initializeUI();
 };
 
 #endif // OPENGLWINDOW_H

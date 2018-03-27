@@ -14,13 +14,13 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
-{
+    ui(new Ui::MainWindow){
     ui->setupUi(this);
+    ui->images_radiobutton->setChecked(true);
+    ui->analysis_radiobutton->setChecked(true);
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow(){
     delete ui;
 }
 
@@ -28,29 +28,31 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_continue_pushbutton_clicked()
 {
+    bool web_cam_mode;
     if (ui->images_radiobutton->isChecked()){
-        hide();
-        ImageMode m;
-        m.setModal(true);
-        m.exec();
-
+        web_cam_mode = false;
     } else if(ui->webcam_radiobutton->isChecked()){
-        putenv("LD_LIBRARY_PATH=" LD_LIBRARY_PATH);
-        chdir(BASE_DIR);
-        int result = std::system("./test " VOCABULARY " " CAM_SETTING);
-        std::string image_dir = BASE_DIR "images";
-        std::string image_csv = BASE_DIR "image_info.csv";
-        if (result == 0){
-            hide();
-            OpenGLWindow o(this,image_dir, image_csv, CAM_SETTING);
-            o.setModal(true);
-            o.exec();
-        } else {
-            QMessageBox::critical(this,"Error","Internal");
-        }
-
+        web_cam_mode = true;
     } else {
-        QMessageBox::critical(this,"Error","Choose atleast one option");
+        QMessageBox::critical(this,"Error","Choose atleast one input option");
+        return;
     }
+
+    bool online_mode;
+    if (ui->analysis_radiobutton->isChecked()){
+        online_mode = false;
+    } else if(ui->online_radiobutton->isChecked()){
+        online_mode = true;
+    } else {
+        QMessageBox::critical(this,"Error","Choose atleast one mode");
+        return;
+    }
+
+    hide();
+    ImageMode m(this, web_cam_mode, online_mode);
+    m.setModal(true);
+    m.exec();
 }
+
+
 
