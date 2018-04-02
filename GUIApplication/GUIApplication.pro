@@ -65,3 +65,6 @@ unix:!macx: LIBS += -L$$PWD/../Pangolin/build/src/ -lpangolin
 
 INCLUDEPATH += $$PWD/../Pangolin/build/src
 DEPENDPATH += $$PWD/../Pangolin/build/src
+
+QMAKE_CXXFLAGS += -fopenmp
+LIBS += -fopenmp

@@ -49,21 +49,24 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - store keypoint descriptors and planes.
 - find the matching algorithm 
 - change UI 
-
-- how to use matched descriptors?
-- read papers
-
 - save web_cam images
-- modify file paths
-- create a direct map load and playback (OPTIONAL)
 
+
+
+- modify file paths (LATER)
+- create a direct map load and playback (OPTIONAL, LATER)
+ 
+- incorporate binary matching
+- complete webcam part with testing
+- detailed reading of papers
+- finding a viable algorithm
 
 -- Mode 1
 - on a video (images/ webcam) if descriptor match -> render plane + mesh (HARD)
 
 -- Mode 2
 - capture video (images/ webcam) scan and store descriptors (MEDIUM)
-- show the map, take input planes, save them (EASY)
+- show the map, take input planes, save them (EASY)		
 
 
 ## Plan

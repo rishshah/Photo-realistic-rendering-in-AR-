@@ -39,8 +39,6 @@ struct Keyframe{
         timestamp(t), position(pos), orientation(q){}
 };
 
-QVector<Point> convert2Point(std::vector<ORB_SLAM2::MapPoint*> points);
-QVector<Point> convert2Point(std::vector<cv::KeyPoint> points);
 int descriptor_match(std::vector<ORB_SLAM2::MapPoint*> map_pts, std::vector<cv::Mat> descriptors, ORB_SLAM2::ORBmatcher* matcher);
 
 class MyGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -104,7 +102,6 @@ private:
     void draw_background();
     void draw_background_webcam();
     void draw_background_images();
-    void draw_keypoints();
 
     void adjustWorldRotationTransform();
     void adjustWorldTranslationTransform();
@@ -139,7 +136,7 @@ private:
     QVector<Plane> m_planes;
     Mesh m_mesh;
 
-    QVector<Point> m_scene_points, m_bg_points, m_vKeys;
+    QVector<Point> m_scene_points, m_bg_points;
     QOpenGLShaderProgram *m_program;
 
     QMatrix4x4 m_proj;
@@ -159,6 +156,8 @@ private:
     std::string m_image_dir;
     QTimer *m_timer;
     int m_simulation_param;
+
+    FILE* m_image_csv;
 };
 
 #endif // MYGLWIDGET_H
