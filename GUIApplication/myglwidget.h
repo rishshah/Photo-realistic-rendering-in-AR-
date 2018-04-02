@@ -71,7 +71,6 @@ public:
 
     // Playback Click
     void playback();
-    void playfirst();
 
     // Add Mesh click
     void input_mesh(std::string f);
@@ -110,6 +109,8 @@ private:
     void readCamSettings(std::string file);
     void readMapPoints(std::string file);
     void readImageCSV(std::string file);
+
+    void playfirst(int param);
 
     float m_xPos, m_yPos, m_zPos;
     int m_xRot, m_yRot, m_zRot;
@@ -158,6 +159,49 @@ private:
     int m_simulation_param;
 
     FILE* m_image_csv;
+
+
+    static constexpr char *m_vertexShaderSource =
+        "#version 330\n"
+        "in vec3 vPosition;\n"
+        "in vec3 vColor;\n"
+        "in vec2 vTexCoord;\n"
+
+        "flat out int is_texture_present;\n"
+        "out vec4 color;\n"
+        "out vec2 tex;\n"
+
+        "uniform int uIs_tp;\n"
+        "uniform mat4 uModelViewMatrix;\n"
+
+        "void main (void)\n"
+        "{\n"
+        "   gl_Position = uModelViewMatrix * vec4(vPosition, 1.0f);\n"
+        "   color = vec4(vColor,1.0f);\n"
+        "   tex = vTexCoord;\n"
+        "   is_texture_present = uIs_tp;\n"
+        "}";
+
+    static constexpr char *m_fragmentShaderSource =
+        "#version 400\n"
+
+        "in vec4 color;\n"
+        "in vec2 tex;\n"
+        "flat in int is_texture_present;\n"
+
+        "out vec4 frag_color;\n"
+        "uniform sampler2D sampler;\n"
+
+        "void main ()\n"
+        "{\n"
+        "   if(is_texture_present == 1){\n"
+        "       frag_color = texture2D(sampler, tex);\n"
+        "       frag_color = vec4(frag_color.x, frag_color.x, frag_color.x, 1);\n"
+        "   } else {\n"
+        "       frag_color = color;\n"
+        "   }\n"
+        "}";
+
 };
 
 #endif // MYGLWIDGET_H

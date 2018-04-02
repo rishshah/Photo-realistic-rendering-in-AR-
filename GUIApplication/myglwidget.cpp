@@ -28,7 +28,7 @@ int descriptor_match(std::vector<ORB_SLAM2::MapPoint*> map_pts, std::vector<cv::
                 }
             }
         }
-        if(bestDist<=50){
+        if(bestDist<=60){
             if(bestLevel==bestLevel2 && bestDist> 0.9 * bestDist2)
                 continue;
 //            printf("best: %d: %d | %d\n",i ,bestIdx, bestDist);
@@ -116,47 +116,6 @@ void MyGLWidget::cleanup() {
     doneCurrent();
 }
 
-static const char *vertexShaderSource =
-    "#version 330\n"
-    "in vec3 vPosition;\n"
-    "in vec3 vColor;\n"
-    "in vec2 vTexCoord;\n"
-
-    "flat out int is_texture_present;\n"
-    "out vec4 color;\n"
-    "out vec2 tex;\n"
-
-    "uniform int uIs_tp;\n"
-    "uniform mat4 uModelViewMatrix;\n"
-
-    "void main (void)\n"
-    "{\n"
-    "   gl_Position = uModelViewMatrix * vec4(vPosition, 1.0f);\n"
-    "   color = vec4(vColor,1.0f);\n"
-    "   tex = vTexCoord;\n"
-    "   is_texture_present = uIs_tp;\n"
-    "}";
-
-static const char *fragmentShaderSource =
-    "#version 400\n"
-
-    "in vec4 color;\n"
-    "in vec2 tex;\n"
-    "flat in int is_texture_present;\n"
-
-    "out vec4 frag_color;\n"
-    "uniform sampler2D sampler;\n"
-
-    "void main ()\n"
-    "{\n"
-    "   if(is_texture_present == 1){\n"
-    "       frag_color = texture2D(sampler, tex);\n"
-    "       frag_color = vec4(frag_color.x, frag_color.x, frag_color.x, 1);\n"
-    "   } else {\n"
-    "       frag_color = color;\n"
-    "   }\n"
-    "}";
-
 void MyGLWidget::adjustWorldRotationTransform(){
     m_worldRotation.setToIdentity();
     m_worldRotation.rotate(180.0f - (m_xRot / 16.0f), 1, 0, 0);
@@ -189,8 +148,8 @@ void MyGLWidget::initializeGL() {
     glClearColor(0, 0, 0, 1);
 
     m_program = new QOpenGLShaderProgram;
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
+    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_vertexShaderSource);
+    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, m_fragmentShaderSource);
     m_program->link();
 
     m_program->bind();
@@ -235,7 +194,8 @@ void MyGLWidget::paintGL() {
             break;
         case MATCH:
             draw_background_webcam();
-            draw_mesh();
+            draw_scene();
+//            draw_mesh();
             break;
         default:
             break;
@@ -248,7 +208,8 @@ void MyGLWidget::paintGL() {
             break;
         case MATCH:
             draw_background_images();
-            draw_mesh();
+            draw_scene();
+//            draw_mesh();
             break;
         default:
             break;
@@ -388,7 +349,7 @@ void MyGLWidget::draw_background_images(){
             im = cv::imread(s, cv::IMREAD_GRAYSCALE);
             cv::undistort(im, imu,m_cam->get_cam_parameter(),m_cam->get_cam_distortion());
 
-            if (m_mode == PLAYBACK){
+            if (m_mode == PLAYBACK or m_mode == MATCH){
                 m_camera =  convert2QMat(m_slam->TrackMonocular(im, m_image_data[m_curr_image_index].second));
             }
             else if (m_mode == PLAY_FIRST){
@@ -408,6 +369,9 @@ void MyGLWidget::draw_background_images(){
                         m_match_thread = QtConcurrent::run(descriptor_match, m_vMPs, keyPoints, m_scene_descriptors, m_matcher);
                         printf("ImgNo-> %d | vMPs-> %d | matches-> %d\n", m_curr_image_index, m_vMPs.size(), m_match_thread.result());
                         /// MATCHING
+                        if (m_match_thread.result() > m_vMPs.size()/2.0){
+                            m_mode = MATCH;
+                        }
                     }
                 }
             }
@@ -443,10 +407,10 @@ void MyGLWidget::draw_background_webcam(){
             m_slam->TrackMonocular(im, m_curr_image_index);
             m_vMPs = m_slam->GetTrackedMapPoints();
             std::vector<cv::KeyPoint> keyPoints = m_slam->GetTrackedKeyPointsUn();
-//            for(uint i=0; i<keyPoints.size(); i++){
-//                if(m_vMPs[i])
-//                    cv::circle(imu,keyPoints[i].pt,1,cv::Scalar(0,255,0),-1);
-//            }
+            for(uint i=0; i<keyPoints.size(); i++){
+                if(m_vMPs[i])
+                    cv::circle(imu,keyPoints[i].pt,1,cv::Scalar(0,255,0),-1);
+            }
 
             if (m_playback_mode == ONLINE_WEBCAM){ // Check for matching
                 if (m_curr_image_index % 50 == 0){
@@ -455,6 +419,9 @@ void MyGLWidget::draw_background_webcam(){
                     m_match_thread = QtConcurrent::run(descriptor_match, m_vMPs, keyPoints, m_scene_descriptors, m_matcher);
                     printf("ImgNo-> %d | vMPs-> %d | matches-> %d\n", m_curr_image_index, m_vMPs.size(), m_match_thread.result());
                     /// MATCHING
+                    if (m_match_thread.result() > m_vMPs.size()/2.0){
+                        m_mode = MATCH;
+                    }
                 }
             } else { // SAVE Webcam Stream
                 string image_png = "image_";
@@ -464,6 +431,9 @@ void MyGLWidget::draw_background_webcam(){
                 fprintf(m_image_csv, "%d,%s\n", m_curr_image_index, image_png.c_str());
             }
 
+        }
+        else if (m_mode == MATCH){
+            m_camera =  convert2QMat(m_slam->TrackMonocular(im, m_image_data[m_curr_image_index].second));
         }
 
         m_curr_image_index++;
@@ -568,7 +538,7 @@ void MyGLWidget::fill_image_data(string camSettings){
         QMessageBox::critical(this,"Error","Webcam Problem");
         return;
     }
-    playfirst();
+    playfirst(1000);
 }
 
 void MyGLWidget::fill_image_data(string camSettings, string mapPoints){
@@ -580,7 +550,7 @@ void MyGLWidget::fill_image_data(string camSettings, string mapPoints){
         QMessageBox::critical(this,"Error","Webcam Problem");
         return;
     }
-    playfirst();
+    playfirst(1000);
 }
 
 void MyGLWidget::fill_image_data(string camSettings, string imageDirectory, string imageCSV){
@@ -588,7 +558,7 @@ void MyGLWidget::fill_image_data(string camSettings, string imageDirectory, stri
     m_image_dir = imageDirectory;
     readCamSettings(camSettings);
     readImageCSV(imageCSV);
-    playfirst();
+    playfirst(30000);
 }
 
 void MyGLWidget::fill_image_data(string camSettings, string imageDirectory, string imageCSV, string mapPoints){
@@ -597,7 +567,7 @@ void MyGLWidget::fill_image_data(string camSettings, string imageDirectory, stri
     readCamSettings(camSettings);
     readImageCSV(imageCSV);
     readMapPoints(mapPoints);
-    playfirst();
+    playfirst(30000);
 }
 
 
@@ -632,11 +602,11 @@ void MyGLWidget::playback() {
     m_timer->start(1);
 }
 
-void MyGLWidget::playfirst() {
+void MyGLWidget::playfirst(int param) {
     m_mode = PLAY_FIRST;
     m_matcher = new ORB_SLAM2::ORBmatcher(0.9,true);
     m_slam = new ORB_SLAM2::System(VOCABULARY, CAM_SETTING, ORB_SLAM2::System::MONOCULAR, false);
-    m_simulation_param = 10000;
+    m_simulation_param = param;
     m_curr_image_index = 0;
     m_timer->start(1);
 }

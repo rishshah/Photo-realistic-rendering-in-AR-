@@ -50,14 +50,13 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - find the matching algorithm 
 - change UI 
 - save web_cam images
-
-
+- incorporate binary matching
+- complete webcam part with testing
 
 - modify file paths (LATER)
 - create a direct map load and playback (OPTIONAL, LATER)
  
-- incorporate binary matching
-- complete webcam part with testing
+- save and load planes and meshes
 - detailed reading of papers
 - finding a viable algorithm
 

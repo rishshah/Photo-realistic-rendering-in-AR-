@@ -11,10 +11,10 @@
 #define VOCABULARY BASE_DIR "ORB_SLAM2/Vocabulary/ORBvoc.txt"
 #define CAM_SETTING BASE_DIR "ORB_SLAM2/Examples/Monocular/EuRoC.yaml"
 
-#define SLAM_POINTS_FILEPATH BASE_DIR "abc.txt"
-#define SLAM_POINTS_DESC_FILEPATH BASE_DIR "abc.desc"
-#define SLAM_KFS_FILEPATH BASE_DIR "KeyFrameTrajectory.txt"
-#define SLAM_RT_MTX_FILEPATH BASE_DIR "RT.txt"
+#define OUTPUT_BASE "/home/rishshah/Downloads/Sem6/Study_Material/RnD/build-GUIApplication-Desktop-Debug/"
+#define SLAM_POINTS_FILEPATH OUTPUT_BASE "abc.txt"
+#define SLAM_POINTS_DESC_FILEPATH OUTPUT_BASE "abc.desc"
+#define SLAM_KFS_FILEPATH OUTPUT_BASE "KeyFrameTrajectory.txt"
 
 #define START_X 10
 #define START_Y 10
@@ -28,7 +28,7 @@
 #include <QtGui/QOpenGLShaderProgram>
 #include "point.h"
 
-#define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
+#define BUFFER_OFFSET( offset ) ((GLvoid*) (offset))
 
 #define ADJUST_SCENE 0
 #define ADJUST_MESH 1
