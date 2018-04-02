@@ -15,7 +15,8 @@
 #define SLAM_POINTS_FILEPATH OUTPUT_BASE "abc.txt"
 #define SLAM_POINTS_DESC_FILEPATH OUTPUT_BASE "abc.desc"
 #define SLAM_KFS_FILEPATH OUTPUT_BASE "KeyFrameTrajectory.txt"
-
+#define AUGMENT_FILEPATH OUTPUT_BASE "augmentations.txt"
+#define MESH_FILEPATH BASE_DIR "sample_mesh.obj"
 #define START_X 10
 #define START_Y 10
 #define SIZE_X 752

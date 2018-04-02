@@ -72,6 +72,10 @@ public:
     // Playback Click
     void playback();
 
+    // Save All Click
+    void saveAll();
+    void loadAll();
+
     // Add Mesh click
     void input_mesh(std::string f);
 
@@ -111,6 +115,7 @@ private:
     void readImageCSV(std::string file);
 
     void playfirst(int param);
+
 
     float m_xPos, m_yPos, m_zPos;
     int m_xRot, m_yRot, m_zRot;

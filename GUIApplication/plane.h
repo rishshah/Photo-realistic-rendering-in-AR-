@@ -28,5 +28,7 @@ public:
     void recolor(float r, float g, float b);
     Plane(QVector3D equation, QVector<QVector3D> points);
     void draw(QOpenGLShaderProgram *program, int vPosition, int vColor);
+    void save(FILE* fp);
+    void load(FILE* fp);
 };
 #endif // PLANE_H

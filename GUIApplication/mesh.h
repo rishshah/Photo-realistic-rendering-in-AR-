@@ -30,6 +30,8 @@ public:
     Mesh();
     Mesh(std::string);
     void draw(QOpenGLShaderProgram *program, QMatrix4x4 transform, int uMatrix, int vPosition, int vColor);
+    void save(FILE* fp);
+    void load(FILE* fp);
 };
 
 #endif // MESH_H

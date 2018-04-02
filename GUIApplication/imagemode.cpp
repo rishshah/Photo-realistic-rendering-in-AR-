@@ -77,7 +77,7 @@ void ImageMode::on_run_pushButton_clicked()
     imageDirectory = BASE_DIR "V1_01_easy/mav0/cam0/data";
     imageCSV  = BASE_DIR "V1_01_easy/mav0/cam0/data.csv";
     camSettings  = BASE_DIR "ORB_SLAM2/Examples/Monocular/EuRoC.yaml";
-    mapPoints = BASE_DIR "abc.txt";
+    mapPoints = OUTPUT_BASE "abc.txt";
 
     OpenGLWindow* o;
     switch (m_mode) {

@@ -1,5 +1,8 @@
 #include "myglwidget.h"
 
+//-------------------------------------------------
+/// Descriptor Matching Algorithm
+//-------------------------------------------------
 int descriptor_match(std::vector<ORB_SLAM2::MapPoint*> map_pts, std::vector<cv::KeyPoint> key_pts, std::vector<cv::Mat> descriptors, ORB_SLAM2::ORBmatcher* matcher){
     int num_matches = 0;
 
@@ -68,6 +71,10 @@ QSize MyGLWidget::sizeHint() const {
     return QSize(400, 400);
 }
 
+
+//-------------------------------------------------
+/// Helper functions (rotations and other transforms)
+//-------------------------------------------------
 static void qNormalizeAngle(int &angle) {
     while (angle < 0)
         angle += 360 * 16;
@@ -129,7 +136,9 @@ void MyGLWidget::adjustWorldTranslationTransform(){
 }
 
 
-
+//-------------------------------------------------
+/// Default functions for QT OpenGL
+//-------------------------------------------------
 void MyGLWidget::resizeGL(int w, int h) {
     m_proj = m_cam->getProjectionTransform(w,h);
 }
@@ -195,7 +204,8 @@ void MyGLWidget::paintGL() {
         case MATCH:
             draw_background_webcam();
             draw_scene();
-//            draw_mesh();
+            draw_planes();
+            draw_mesh();
             break;
         default:
             break;
@@ -209,7 +219,8 @@ void MyGLWidget::paintGL() {
         case MATCH:
             draw_background_images();
             draw_scene();
-//            draw_mesh();
+            draw_planes();
+            draw_mesh();
             break;
         default:
             break;
@@ -276,7 +287,9 @@ void MyGLWidget::paintGL() {
 }
 
 
-
+//-------------------------------------------------
+/// Draw elements on the screen
+//-------------------------------------------------
 void MyGLWidget::draw_planes(){
     m_program->setUniformValue(m_uIs_tp, 0);
     m_program->setUniformValue(m_mvMatrixLoc, m_proj * m_worldRotation * m_camera * m_worldTranslation);
@@ -357,7 +370,7 @@ void MyGLWidget::draw_background_images(){
                 m_slam->TrackMonocular(im, m_image_data[m_curr_image_index].second);
                 m_vMPs = m_slam->GetTrackedMapPoints();
                 std::vector<cv::KeyPoint> keyPoints = m_slam->GetTrackedKeyPointsUn();
-                for(int i=0; i<keyPoints.size(); i++){
+                for(uint i=0; i<keyPoints.size(); i++){
                     if(m_vMPs[i])
                         cv::circle(imu,keyPoints[i].pt,1,cv::Scalar(0,255,0),-1);
                 }
@@ -369,8 +382,9 @@ void MyGLWidget::draw_background_images(){
                         m_match_thread = QtConcurrent::run(descriptor_match, m_vMPs, keyPoints, m_scene_descriptors, m_matcher);
                         printf("ImgNo-> %d | vMPs-> %d | matches-> %d\n", m_curr_image_index, m_vMPs.size(), m_match_thread.result());
                         /// MATCHING
-                        if (m_match_thread.result() > m_vMPs.size()/2.0){
+                        if (m_match_thread.result() > m_vMPs.size()/3.0){
                             m_mode = MATCH;
+                            loadAll();
                         }
                     }
                 }
@@ -383,9 +397,9 @@ void MyGLWidget::draw_background_images(){
             m_i = 0;
             m_timer->stop();
             m_slam->Shutdown();
-            m_slam->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
             if (m_mode == PLAY_FIRST and m_playback_mode == OFFLINE_IMAGES){
                 m_mode = ADJUST_SCENE;
+                m_slam->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
                 // Load map points // change path
                 readMapPoints(SLAM_POINTS_FILEPATH);
             }
@@ -421,6 +435,7 @@ void MyGLWidget::draw_background_webcam(){
                     /// MATCHING
                     if (m_match_thread.result() > m_vMPs.size()/2.0){
                         m_mode = MATCH;
+                        loadAll();
                     }
                 }
             } else { // SAVE Webcam Stream
@@ -433,7 +448,7 @@ void MyGLWidget::draw_background_webcam(){
 
         }
         else if (m_mode == MATCH){
-            m_camera =  convert2QMat(m_slam->TrackMonocular(im, m_image_data[m_curr_image_index].second));
+            m_camera =  convert2QMat(m_slam->TrackMonocular(im, m_curr_image_index));
         }
 
         m_curr_image_index++;
@@ -442,12 +457,12 @@ void MyGLWidget::draw_background_webcam(){
         m_curr_image_index = 0;
         m_timer->stop();
         m_slam->Shutdown();
-        m_slam->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
         if(m_webcam.isOpened())
            m_webcam.release();
 
         if (m_mode == PLAY_FIRST and m_playback_mode == OFFLINE_WEBCAM){
             fclose(m_image_csv);
+            m_slam->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
             m_mode = ADJUST_SCENE;
             // Load images, map points
             readMapPoints("./abc.txt");
@@ -460,7 +475,9 @@ void MyGLWidget::draw_background_webcam(){
 }
 
 
-
+//-------------------------------------------------
+/// Read input files (CamSettings, MapPoints, Descriptors, Images)
+//-------------------------------------------------
 void MyGLWidget::readCamSettings(string file){
     cv::FileStorage fSettings;
     fSettings.open(file, cv::FileStorage::READ);
@@ -522,7 +539,9 @@ void MyGLWidget::readImageCSV(string file){
 }
 
 
-
+//-------------------------------------------------
+/// Initialize widget according to 4 different modes
+//-------------------------------------------------
 void MyGLWidget::fill_image_data(string camSettings){
     m_playback_mode = OFFLINE_WEBCAM; // Play webcam for a brand new video and record mappoints and video too
     readCamSettings(camSettings);
@@ -571,7 +590,9 @@ void MyGLWidget::fill_image_data(string camSettings, string imageDirectory, stri
 }
 
 
-
+//-------------------------------------------------
+/// Initialize mesh and background quad
+//-------------------------------------------------
 void MyGLWidget::init_background(){
     float i = 1, j = 1, z = -1;
     m_bg_points.append(Point(QVector3D(-1*i, i, z), QVector2D(0, j)));
@@ -593,15 +614,10 @@ void MyGLWidget::input_mesh(std::string fileName) {
     update();
 }
 
-void MyGLWidget::playback() {
-    m_mode = PLAYBACK;
-    delete m_slam;
-    m_slam = new ORB_SLAM2::System(VOCABULARY, CAM_SETTING, ORB_SLAM2::System::MONOCULAR, false);
-    m_simulation_param = 30000;
-    m_curr_image_index = 0;
-    m_timer->start(1);
-}
 
+//-------------------------------------------------
+/// Initlialize function for PLAYFIRST and PLAYBACK mode
+//-------------------------------------------------
 void MyGLWidget::playfirst(int param) {
     m_mode = PLAY_FIRST;
     m_matcher = new ORB_SLAM2::ORBmatcher(0.9,true);
@@ -611,8 +627,55 @@ void MyGLWidget::playfirst(int param) {
     m_timer->start(1);
 }
 
+void MyGLWidget::playback() {
+    m_mode = PLAYBACK;
+    delete m_slam;
+    m_slam = new ORB_SLAM2::System(VOCABULARY, CAM_SETTING, ORB_SLAM2::System::MONOCULAR, false);
+    m_simulation_param = 30000;
+    m_curr_image_index = 0;
+    m_timer->start(1);
+}
 
 
+//-------------------------------------------------
+/// Save/Load mesh and planes
+//-------------------------------------------------
+void MyGLWidget::saveAll() {
+    FILE* fp_output = fopen(AUGMENT_FILEPATH, "w" );
+    if (fp_output ==  NULL) {
+        QMessageBox::critical(this, "Error", "cannot save output");
+    }
+    fprintf(fp_output, "%d\n", m_planes.size());
+    for(uint i=0;i<m_planes.size();i++){
+      m_planes[i].save(fp_output);
+    }
+    m_mesh.save(fp_output);
+
+    fclose(fp_output);
+}
+
+void MyGLWidget::loadAll() {
+    FILE* fp = fopen(AUGMENT_FILEPATH, "r" );
+    if (fp ==  NULL) {
+        QMessageBox::critical(this, "Error", "cannot load planes and meshes");
+    }
+    int x;
+    fscanf(fp, "%d\n", &x);
+    for(uint i=0;i<x;i++){
+        Plane p;
+        p.load(fp);
+        m_planes.push_back(p);
+    }
+    std::string mesh_file = MESH_FILEPATH;
+    m_mesh = Mesh(mesh_file);
+    m_mesh.load(fp);
+    fclose(fp);
+}
+
+
+//-------------------------------------------------
+/// Keyboards and Mouse Events
+//-------------------------------------------------
 void MyGLWidget::mousePress(QMouseEvent *event) {
     m_lastPos = event->pos();
 }
@@ -720,7 +783,9 @@ void MyGLWidget::keyPress(QKeyEvent *event){
 }
 
 
-
+//-------------------------------------------------
+/// GLWidget interface functions
+//-------------------------------------------------
 void MyGLWidget::add_plane() {
     QVector<QVector3D> selected_points;
     for (int i = 0; i < m_scene_points.size(); i++) {

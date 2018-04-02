@@ -7,6 +7,20 @@ Plane::Plane(){
     initializeOpenGLFunctions();
 }
 
+void Plane::save(FILE* fp){
+    for(uint i=0;i<m_points.size();i++){
+        fprintf(fp, "%f %f %f\n", m_points[i].position.x(), m_points[i].position.y(), m_points[i].position.z());
+    }
+}
+void Plane::load(FILE* fp){
+    m_points.resize(6);
+    for(uint i=0;i<6;i++){
+        float x,y,z;
+        fscanf(fp, "%f %f %f\n", &x,&y,&z);
+        m_points[i].position = QVector3D(x,y,z);
+    }
+}
+
 float Plane::num_between_corners(QMatrix4x4 transform, QVector3D c1, QVector3D c2){
     int num_bw_corners = 0;
     for(int i=0;i<m_points.size(); i++){

@@ -42,6 +42,7 @@ void OpenGLWindow::initializeUI(){
     ui->pan_radioButton->setChecked(true);
     ui->radioButton_add->setChecked(true);
     ui->pushButton_playback->setVisible(false);
+    ui->pushButton_save->setVisible(false);
 }
 
 OpenGLWindow::~OpenGLWindow(){
@@ -90,9 +91,10 @@ void OpenGLWindow::on_pushButton_add_mesh_clicked()
 {
 //    QString meshFile = QFileDialog::getOpenFileName(this, tr("Choose Mesh Object File"), "", tr("Object (*.obj);; All files (*.*)"));
 //    std::string meshFile_str = meshFile.toUtf8().constData();
-    std::string meshFile_str = BASE_DIR "sample_mesh.obj";
+    std::string meshFile_str = MESH_FILEPATH;
     ui->openGLWidget->input_mesh(meshFile_str);
     ui->pushButton_playback->setVisible(true);
+    ui->pushButton_save->setVisible(true);
 }
 
 void OpenGLWindow::on_pushButton_playback_clicked(){
@@ -101,4 +103,8 @@ void OpenGLWindow::on_pushButton_playback_clicked(){
 
 void OpenGLWindow::on_pushButton_exit_clicked(){
     QApplication::quit();
+}
+
+void OpenGLWindow::on_pushButton_save_clicked(){
+    ui->openGLWidget->saveAll();
 }

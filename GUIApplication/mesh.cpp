@@ -1,5 +1,19 @@
 #include "mesh.h"
 
+
+void Mesh::save(FILE* fp){
+    fprintf(fp, "%f %f %f\n", m_scale.x(), m_scale.y(), m_scale.z());
+    fprintf(fp, "%f %f %f\n", m_translation.x(), m_translation.y(), m_translation.z());
+}
+
+void Mesh::load(FILE* fp){
+    float x,y,z;
+    fscanf(fp, "%f %f %f\n", &x, &y, &z);
+    m_scale = QVector3D(x,y,z);
+    fscanf(fp, "%f %f %f\n", &x, &y, &z);
+    m_translation = QVector3D(x,y,z);
+}
+
 void Mesh::adjust(QVector3D v, QMatrix4x4 transform1, QMatrix4x4 transform2){
     QMatrix4x4 model_transform;
     model_transform.setToIdentity();

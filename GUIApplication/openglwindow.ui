@@ -27,7 +27,7 @@
    <property name="geometry">
     <rect>
      <x>790</x>
-     <y>334</y>
+     <y>310</y>
      <width>141</width>
      <height>21</height>
     </rect>
@@ -66,7 +66,7 @@
    <property name="geometry">
     <rect>
      <x>790</x>
-     <y>365</y>
+     <y>340</y>
      <width>141</width>
      <height>20</height>
     </rect>
@@ -79,7 +79,7 @@
    <property name="geometry">
     <rect>
      <x>790</x>
-     <y>395</y>
+     <y>370</y>
      <width>141</width>
      <height>20</height>
     </rect>
@@ -92,7 +92,7 @@
    <property name="geometry">
     <rect>
      <x>790</x>
-     <y>425</y>
+     <y>430</y>
      <width>141</width>
      <height>20</height>
     </rect>
@@ -140,6 +140,19 @@
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QPushButton" name="pushButton_save">
+   <property name="geometry">
+    <rect>
+     <x>790</x>
+     <y>400</y>
+     <width>141</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save All</string>
+   </property>
   </widget>
  </widget>
  <customwidgets>

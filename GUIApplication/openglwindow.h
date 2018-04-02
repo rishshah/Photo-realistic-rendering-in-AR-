@@ -32,6 +32,8 @@ private slots:
 
     void on_pushButton_exit_clicked();
 
+    void on_pushButton_save_clicked();
+
 private:
     Ui::OpenGLWindow *ui;
     void initializeUI();

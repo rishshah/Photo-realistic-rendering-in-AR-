@@ -52,20 +52,12 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - save web_cam images
 - incorporate binary matching
 - complete webcam part with testing
+- save and load planes and meshes
 
-- modify file paths (LATER)
 - create a direct map load and playback (OPTIONAL, LATER)
  
-- save and load planes and meshes
 - detailed reading of papers
 - finding a viable algorithm
-
--- Mode 1
-- on a video (images/ webcam) if descriptor match -> render plane + mesh (HARD)
-
--- Mode 2
-- capture video (images/ webcam) scan and store descriptors (MEDIUM)
-- show the map, take input planes, save them (EASY)		
 
 
 ## Plan
@@ -79,14 +71,19 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 #### Overview
 A GUI application for user to visualize augmented reality using script that builds ORBSLAM, processing the output for purpose of mounting a 3d surface on input 2d video for rendering synthetic meshes
 
-- ORB SLAM API 
+##### ORB SLAM API 
 	- Work 		(C++ program, using api calls of ORBSLAM and getting output)
 	- Input		(Images in sequences)
 	- Output 	(3D Points of scene)
 
-- QT C++ GUI application that outputs planes from the given points (RANSAC and Regression)
+##### QT C++ GUI application that outputs planes from the given points (RANSAC and Regression)
 
+##### Mode 1
+- on a video (images/ webcam) if descriptor match -> render plane + mesh
 
+##### Mode 2
+- capture video (images/ webcam) scan and store descriptors
+- show the map, take input planes, save them 
 
 
 
