@@ -56,3 +56,11 @@ void MainWindow::on_continue_pushbutton_clicked()
 
 
 
+
+void MainWindow::on_pushButton_clicked()
+{
+    hide();
+    OpenGLWindow m(this);
+    m.setModal(true);
+    m.exec();
+}

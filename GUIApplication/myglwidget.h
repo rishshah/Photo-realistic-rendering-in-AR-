@@ -24,9 +24,10 @@
 #include "utils.h"
 #include "camera.h"
 
-#define DX 0.01
-#define DY 0.01
-#define DZ 0.01
+#define DX 0.1
+#define DY 0.1
+#define DZ 0.1
+#define DM 1
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
@@ -53,6 +54,7 @@ public:
     QSize sizeHint() const Q_DECL_OVERRIDE;
 
     // Images input at start
+    void fill_image_data(); // Direct Map changes DEBUG
     void fill_image_data(std::string  camSettings); // Webcam Online
     void fill_image_data(string camSettings, string mapPoints); // Webcam Offline
     void fill_image_data(std::string  camSettings, std::string imageDirectory, std::string imageCSV); // Images Online
@@ -98,6 +100,7 @@ protected:
 
 private:
     void init_background();
+    int get_image_index(int start, double val);
 
     void draw_scene();
     void draw_mesh();
@@ -113,6 +116,7 @@ private:
     void readCamSettings(std::string file);
     void readMapPoints(std::string file);
     void readImageCSV(std::string file);
+    void readKeyFrames(std::string file);
 
     void playfirst(int param);
 
@@ -121,14 +125,14 @@ private:
     int m_xRot, m_yRot, m_zRot;
     int m_mode, m_playback_mode;
 
-    int m_i, m_ij;
+    int m_i;
     int m_mvMatrixLoc, m_vColor, m_vPosition, m_uIs_tp, m_vTexCoord;
     GLuint bg_tex;
 
     int m_selected_plane_for_removal, m_curr_image_index, m_curr_keyframe_index;
     int m_plane_1, m_plane_2;
     int m_snap_plane;
-    bool m_mesh_point_selected;
+    bool m_mesh_point_selected, m_shift;
 
     QPoint m_lastPos;
 

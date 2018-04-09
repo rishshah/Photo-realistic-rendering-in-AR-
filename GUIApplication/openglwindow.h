@@ -12,6 +12,7 @@ class OpenGLWindow : public QDialog
 {
     Q_OBJECT
 public:
+    explicit OpenGLWindow(QWidget *parent);
     explicit OpenGLWindow(QWidget *parent, std::string  camSettings);
     explicit OpenGLWindow(QWidget *parent, std::string  camSettings, std::string mapPoints);
     explicit OpenGLWindow(QWidget *parent, std::string  camSettings, std::string imageDirectory, std::string imageCSV);

@@ -3,6 +3,14 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+OpenGLWindow::OpenGLWindow(QWidget *parent):
+    QDialog(parent),
+    ui(new Ui::OpenGLWindow){
+    ui->setupUi(this);
+    ui->openGLWidget->fill_image_data();
+    initializeUI();
+}
+
 OpenGLWindow::OpenGLWindow(QWidget *parent, std::string camSettings):
     QDialog(parent),
     ui(new Ui::OpenGLWindow){

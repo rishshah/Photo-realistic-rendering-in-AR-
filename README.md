@@ -53,12 +53,21 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 - incorporate binary matching
 - complete webcam part with testing
 - save and load planes and meshes
+- show various keyframes with points for plane selection
+- adjust the initial point texture correlation
+- change the box movement parameters
 
-- create a direct map load and playback (OPTIONAL, LATER)
- 
+
+### Immediate goals
+- use webcam intrinsic parameters (ACTUAL CALLIBRATION REMAINING)
+
 - detailed reading of papers
 - finding a viable algorithm
 
+
+### Later Goals
+- one possible error handling in webcam online mode
+- omp parallel for the parallel part (MAYBE - TODAY)
 
 ## Plan
 - Some storage of planes (later)

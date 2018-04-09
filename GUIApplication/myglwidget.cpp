@@ -34,8 +34,6 @@ int descriptor_match(std::vector<ORB_SLAM2::MapPoint*> map_pts, std::vector<cv::
         if(bestDist<=60){
             if(bestLevel==bestLevel2 && bestDist> 0.9 * bestDist2)
                 continue;
-//            printf("best: %d: %d | %d\n",i ,bestIdx, bestDist);
-
             num_matches++;
         }
     }
@@ -46,15 +44,16 @@ MyGLWidget::MyGLWidget(QWidget *parent)
     : QOpenGLWidget(parent),
       m_xPos(0.0f), m_yPos(0.0f), m_zPos(0.0f),
       m_xRot(0), m_yRot(0), m_zRot(0),
-      m_i(0),m_ij(0),
+      m_i(0),
       m_selected_plane_for_removal(-1),
       m_curr_image_index(0),
       m_curr_keyframe_index(0),
       m_plane_1(-1),
       m_plane_2(-1),
       m_snap_plane(-1),
-      m_mesh_point_selected(false),
-      m_program(0) {
+      m_mesh_point_selected(false), m_shift(false),
+      m_program(0),
+      m_slam(NULL) {
     m_timer = new QTimer(this);
     connect(m_timer, SIGNAL(timeout()), this, SLOT(update()));
 }
@@ -232,6 +231,7 @@ void MyGLWidget::paintGL() {
             draw_background_webcam();
             break;
         case ADJUST_SCENE:
+            draw_background_images();
             draw_scene();
             draw_planes();
             break;
@@ -259,6 +259,7 @@ void MyGLWidget::paintGL() {
             draw_background_images();
             break;
         case ADJUST_SCENE:
+            draw_background_images();
             draw_scene();
             draw_planes();
             break;
@@ -351,10 +352,17 @@ void MyGLWidget::draw_background() {
 void MyGLWidget::draw_background_images(){
     cv::Mat imu;
     cv::Mat im;
-    if (m_mode == ADJUST_MESH){
-        std::string s = m_image_dir + "/" + m_image_data[0].first;
+    if (m_mode == ADJUST_SCENE or m_mode == ADJUST_MESH){
+        int image_index = get_image_index(0, m_keyframes[m_i].timestamp);
+        if (image_index == -1 or image_index == -2)
+            printf("ERRR %d: %d", m_i, image_index);
+
+        std::string s = m_image_dir + "/" + m_image_data[image_index].first;
         im = cv::imread(s, cv::IMREAD_GRAYSCALE);
         cv::undistort(im,imu,m_cam->get_cam_parameter(),m_cam->get_cam_distortion());
+
+        m_camera.rotate(m_keyframes[m_i].orientation.conjugate());
+        m_camera.translate(-m_keyframes[m_i].position);
     }
     else {
         if(m_curr_image_index < m_image_data.size()){
@@ -394,14 +402,14 @@ void MyGLWidget::draw_background_images(){
         } else {
             m_curr_image_index = 0;
             m_curr_keyframe_index = 0;
-            m_i = 0;
             m_timer->stop();
             m_slam->Shutdown();
             if (m_mode == PLAY_FIRST and m_playback_mode == OFFLINE_IMAGES){
                 m_mode = ADJUST_SCENE;
                 m_slam->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
                 // Load map points // change path
-                readMapPoints(SLAM_POINTS_FILEPATH);
+                readMapPoints("./abc.txt");
+                readKeyFrames("./KeyFrameTrajectory.txt");
             }
             return;
         }
@@ -467,6 +475,7 @@ void MyGLWidget::draw_background_webcam(){
             // Load images, map points
             readMapPoints("./abc.txt");
             readImageCSV("./imageinfo.csv");
+            readKeyFrames("KeyFrameTrajectory.txt");
         }
         return;
     }
@@ -538,6 +547,30 @@ void MyGLWidget::readImageCSV(string file){
     }
 }
 
+void MyGLWidget::readKeyFrames(string file){
+    FILE* fp_input = fopen(file.c_str(), "r" );
+    if (fp_input ==  NULL) {
+        QMessageBox::critical(this, "Error", "resdkeyframes: file corrupt");
+        return;
+    } else {
+        m_keyframes.clear();
+        double t;float x, y, z, q1, q2, q3, q4;
+        while (fscanf (fp_input, "%lf %f %f %f %f %f %f %f", &t, &x, &y, &z, &q1, &q2, &q3 ,&q4) != EOF) {
+            m_keyframes.push_back(Keyframe(t, QVector3D(x, y, z), QQuaternion(q4, q1, q2, q3)));
+        }
+        fclose(fp_input);
+    }
+
+    double minTimeStamp = std::min(m_keyframes[0].timestamp, m_image_data[0].second);
+    double maxTimeStamp = std::max(m_keyframes[m_keyframes.size()-1].timestamp, m_image_data[m_image_data.size()-1].second);
+    for(uint i=0; i< m_image_data.size();i++){
+        m_image_data[i].second = (m_image_data[i].second - minTimeStamp)/(maxTimeStamp - minTimeStamp);
+    }
+    for(uint i=0; i< m_keyframes.size();i++){
+        m_keyframes[i].timestamp = (m_keyframes[i].timestamp - minTimeStamp)/(maxTimeStamp - minTimeStamp);
+    }
+}
+
 
 //-------------------------------------------------
 /// Initialize widget according to 4 different modes
@@ -589,6 +622,22 @@ void MyGLWidget::fill_image_data(string camSettings, string imageDirectory, stri
     playfirst(30000);
 }
 
+void MyGLWidget::fill_image_data(){
+    m_playback_mode = OFFLINE_IMAGES;
+    m_mode = ADJUST_SCENE;
+    string imageDirectory = BASE_DIR "V1_01_easy/mav0/cam0/data";
+    string imageCSV  = BASE_DIR "V1_01_easy/mav0/cam0/data.csv";
+    string camSettings  = BASE_DIR "ORB_SLAM2/Examples/Monocular/EuRoC.yaml";
+    string mapPoints = OUTPUT_BASE "abc.txt";
+    string keyframes = OUTPUT_BASE "KeyFrameTrajectory.txt";
+
+    m_image_dir = imageDirectory;
+    readCamSettings(camSettings);
+    readImageCSV(imageCSV);
+    readMapPoints(mapPoints);
+    readKeyFrames(keyframes);
+}
+
 
 //-------------------------------------------------
 /// Initialize mesh and background quad
@@ -614,6 +663,15 @@ void MyGLWidget::input_mesh(std::string fileName) {
     update();
 }
 
+int MyGLWidget::get_image_index(int start, double val){
+    for(uint i=start;i<m_image_data.size()-1;i++){
+        if(m_image_data[i].second == val)
+            return i;
+        if (val < m_image_data[i].second)
+            return -1;
+    }
+    return -2;
+}
 
 //-------------------------------------------------
 /// Initlialize function for PLAYFIRST and PLAYBACK mode
@@ -629,7 +687,8 @@ void MyGLWidget::playfirst(int param) {
 
 void MyGLWidget::playback() {
     m_mode = PLAYBACK;
-    delete m_slam;
+    if (m_slam != NULL)
+        delete m_slam;
     m_slam = new ORB_SLAM2::System(VOCABULARY, CAM_SETTING, ORB_SLAM2::System::MONOCULAR, false);
     m_simulation_param = 30000;
     m_curr_image_index = 0;
@@ -760,24 +819,56 @@ void MyGLWidget::mouseMove(QMouseEvent *event, bool select_mode,  std::string in
 
 void MyGLWidget::keyPress(QKeyEvent *event){
     if(event->key() == Qt::Key_S){
-        m_yPos -= DY;
+        if (m_shift)
+            m_yPos -= DY/10.0;
+        else
+            m_yPos -= DY;
     }
     else if(event->key() == Qt::Key_W){
-        m_yPos += DY;
+        if (m_shift)
+            m_yPos += DY/10.0;
+        else
+            m_yPos += DY;
     }
 
     if(event->key() == Qt::Key_A){
-        m_xPos -= DX;
+        if (m_shift)
+            m_xPos -= DX/10.0;
+        else
+            m_xPos -= DX;
     }
     else if(event->key() == Qt::Key_D){
-        m_xPos += DX;
+        if (m_shift)
+            m_xPos += DX/10.0;
+        else
+            m_xPos += DX;
     }
 
     if(event->key() == Qt::Key_X){
-        m_zPos -= DZ;
+        if (m_shift)
+            m_zPos -= DZ/10.0;
+        else
+            m_zPos -= DZ;
     }
     else if(event->key() == Qt::Key_Z){
-        m_zPos += DZ;
+        if (m_shift)
+            m_zPos += DZ/10.0;
+        else
+            m_zPos += DZ;
+    }
+
+    if(event->key() == Qt::Key_Shift){
+        m_shift = true;
+    }
+    else if(event->key() == Qt::Key_Alt){
+        m_shift = false;
+    }
+
+    if((m_mode == ADJUST_SCENE or m_mode == ADJUST_MESH)  and event->key() == Qt::Key_P){
+        m_i = (m_i + DM) % m_keyframes.size();
+    }
+    else if((m_mode == ADJUST_SCENE or m_mode == ADJUST_MESH) and event->key() == Qt::Key_O){
+        m_i = (m_i - DM) % m_keyframes.size();
     }
     update();
 }
