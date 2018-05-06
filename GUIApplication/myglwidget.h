@@ -126,7 +126,7 @@ private:
     int m_mode, m_playback_mode;
 
     int m_i;
-    int m_mvMatrixLoc, m_vColor, m_vPosition, m_uIs_tp, m_vTexCoord;
+    int m_mvMatrixLoc, m_vColor, m_vPosition, m_uIs_tp, m_vTexCoord, m_uIs_colored;
     GLuint bg_tex;
 
     int m_selected_plane_for_removal, m_curr_image_index, m_curr_keyframe_index;
@@ -168,7 +168,7 @@ private:
     int m_simulation_param;
 
     FILE* m_image_csv;
-
+    std::string m_camera_settings;
 
     static constexpr char *m_vertexShaderSource =
         "#version 330\n"
@@ -177,10 +177,12 @@ private:
         "in vec2 vTexCoord;\n"
 
         "flat out int is_texture_present;\n"
+        "flat out int is_colored;\n"
         "out vec4 color;\n"
         "out vec2 tex;\n"
 
         "uniform int uIs_tp;\n"
+        "uniform int uIs_colored;\n"
         "uniform mat4 uModelViewMatrix;\n"
 
         "void main (void)\n"
@@ -189,6 +191,7 @@ private:
         "   color = vec4(vColor,1.0f);\n"
         "   tex = vTexCoord;\n"
         "   is_texture_present = uIs_tp;\n"
+        "   is_colored = uIs_colored;\n"
         "}";
 
     static constexpr char *m_fragmentShaderSource =
@@ -197,6 +200,7 @@ private:
         "in vec4 color;\n"
         "in vec2 tex;\n"
         "flat in int is_texture_present;\n"
+        "flat in int is_colored;\n"
 
         "out vec4 frag_color;\n"
         "uniform sampler2D sampler;\n"
@@ -205,7 +209,8 @@ private:
         "{\n"
         "   if(is_texture_present == 1){\n"
         "       frag_color = texture2D(sampler, tex);\n"
-        "       frag_color = vec4(frag_color.x, frag_color.x, frag_color.x, 1);\n"
+        "       if (is_colored == 0)\n"
+        "           frag_color = vec4(frag_color.x, frag_color.x, frag_color.x, 1);\n"
         "   } else {\n"
         "       frag_color = color;\n"
         "   }\n"

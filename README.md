@@ -63,6 +63,11 @@ The photorealistic rendering part includes 3D mesh rendering in global illuminat
 
 - detailed reading of papers
 - finding a viable algorithm
+- UI description easy,  Coming up too
+- Challenges in ORBSLA
+- Coherent work in the end
+- Result photographs and explaination
+- Test whether it works elsewhere
 
 
 ### Later Goals

@@ -12,6 +12,12 @@
 #include <cstdlib>
 #include <unistd.h>
 
+/**
+ * @brief Qt constructor for input window
+ * 
+ * @param web_cam_mode  True if user selected webcam as input mode
+ * @param online_mode   True if user selected online as application mode
+ */
 ImageMode::ImageMode(QWidget *parent, bool web_cam_mode, bool online_mode) :
     QDialog(parent),
     ui(new Ui::ImageMode){
@@ -43,30 +49,45 @@ ImageMode::~ImageMode()
     delete ui;
 }
 
+/**
+ * @brief open dialog box for getting image directory location
+ */
 void ImageMode::on_image_dir_button_clicked()
 {
     QString imageDirectory= QFileDialog::getExistingDirectory(this, tr("Choose Image Directory"),"", QFileDialog::ShowDirsOnly| QFileDialog::DontResolveSymlinks);
     ui->image_dir_label->setText(imageDirectory);
 }
 
+/**
+ * @brief open dialog box for getting image csv file location (.csv)
+ */
 void ImageMode::on_image_csv_button_clicked()
 {
     QString imageInfoCSV = QFileDialog::getOpenFileName(this, tr("Choose Images Info CSV"), "", tr("CSV (*.csv);; All files (*.*)"));
     ui->image_csv_label->setText(imageInfoCSV);
 }
 
+/**
+ * @brief open dialog box for getting camera settings file (.YAML)
+ */
 void ImageMode::on_cam_settings_button_clicked()
 {
     QString camSettings = QFileDialog::getOpenFileName(this, tr("Choose Settings file for Camera"), "", tr("All files (*.*)"));
     ui->cam_settings_label->setText(camSettings);
 }
 
+/**
+ * @brief open dialog box for getting map file (.txt)
+ */
 void ImageMode::on_map_points_button_clicked()
 {
     QString mapPoints = QFileDialog::getOpenFileName(this, tr("Choose Precomputed Map Points file"), "", tr("All files (*.*)"));
     ui->map_points_label->setText(mapPoints);
 }
 
+/**
+ * @brief Functionality of "Run" button click
+ */
 void ImageMode::on_run_pushButton_clicked()
 {
     std::string imageDirectory = ui->image_dir_label->text().toUtf8().constData();
@@ -74,6 +95,7 @@ void ImageMode::on_run_pushButton_clicked()
     std::string camSettings = ui->cam_settings_label->text().toUtf8().constData();
     std::string mapPoints = ui->map_points_label->text().toUtf8().constData();
 
+    // Default values for debugging.
     imageDirectory = BASE_DIR "V1_01_easy/mav0/cam0/data";
     imageCSV  = BASE_DIR "V1_01_easy/mav0/cam0/data.csv";
     camSettings  = BASE_DIR "ORB_SLAM2/Examples/Monocular/EuRoC.yaml";
@@ -86,6 +108,7 @@ void ImageMode::on_run_pushButton_clicked()
             QMessageBox::critical(this,"Error","Choose appropriate files before run");
             return;
         }
+        camSettings  = BASE_DIR "webcam.yaml";
         o = new OpenGLWindow(this, camSettings, mapPoints);
         break;
     case ONLINE_IMAGES:
@@ -107,6 +130,7 @@ void ImageMode::on_run_pushButton_clicked()
             QMessageBox::critical(this,"Error","Choose appropriate files before run");
             return;
         }
+        camSettings  = BASE_DIR "webcam.yaml";
         o = new OpenGLWindow(this, camSettings);
         break;
     default:

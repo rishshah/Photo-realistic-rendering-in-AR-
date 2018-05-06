@@ -1,11 +1,20 @@
 #include "mesh.h"
 
-
+/**
+ * @brief Save the mesh translation and scale
+ * 
+ * @param fp open file pointer in which the save is made
+ */
 void Mesh::save(FILE* fp){
     fprintf(fp, "%f %f %f\n", m_scale.x(), m_scale.y(), m_scale.z());
     fprintf(fp, "%f %f %f\n", m_translation.x(), m_translation.y(), m_translation.z());
 }
 
+/**
+ * @brief Load the mesh translation and scale
+ * 
+ * @param fp open file pointer from which we load
+ */
 void Mesh::load(FILE* fp){
     float x,y,z;
     fscanf(fp, "%f %f %f\n", &x, &y, &z);
@@ -14,6 +23,13 @@ void Mesh::load(FILE* fp){
     m_translation = QVector3D(x,y,z);
 }
 
+/**
+ * @brief Move the mesh to join its selected point to a plane's selected point
+ * 
+ * @param v point on the plane mesh should join to
+ * @param transform1 world transform of plane
+ * @param transform2 world transform of mesh
+ */
 void Mesh::adjust(QVector3D v, QMatrix4x4 transform1, QMatrix4x4 transform2){
     QMatrix4x4 model_transform;
     model_transform.setToIdentity();
@@ -25,6 +41,14 @@ void Mesh::adjust(QVector3D v, QMatrix4x4 transform1, QMatrix4x4 transform2){
     m_points[m_selected_point].color = m_selected_point_color;
 }
 
+/**
+ * @brief Select point on mesh
+ * 
+ * @param transform mesh world transform
+ * @param c1 corner 1 of mouse drag
+ * @param c2 corner opposite to corner 1 of mouse drag
+ * @return True if selection successful
+ */
 bool Mesh::select_point(QMatrix4x4 transform, QVector3D c1, QVector3D c2){
     QMatrix4x4 model_transform;
     model_transform.setToIdentity();
@@ -40,13 +64,18 @@ bool Mesh::select_point(QMatrix4x4 transform, QVector3D c1, QVector3D c2){
     return false;
 }
 
+/**
+ * @brief Recolor the mesh selected vertex
+ */
 void Mesh::recolor_selected(float r, float g, float b){
     m_points[m_selected_point].color = QVector3D(r,g,b);
 }
 
 Mesh::Mesh(){
 }
-
+/**
+ * @brief Load mesh from given file 
+ */
 Mesh::Mesh(std::string fileName){
     initializeOpenGLFunctions();
     FILE *fp_input = fopen(fileName.c_str(), "r" );
@@ -67,6 +96,15 @@ Mesh::Mesh(std::string fileName){
     m_vbo.create();
 }
 
+/**
+ * @brief Draw mesh on the screen
+ * 
+ * @param program opengl shader program 
+ * @param transform world transform to be applied before drawing
+ * @param uMatrix shader location of overall transform
+ * @param vPosition shader location of vertex position 
+ * @param vColor shader location of vertex color
+ */
 void Mesh::draw(QOpenGLShaderProgram *program, QMatrix4x4 transform, int uMatrix, int vPosition, int vColor){
     QMatrix4x4 model_transform;
     model_transform.setToIdentity();

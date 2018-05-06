@@ -7,6 +7,9 @@ namespace Ui {
 class ImageMode;
 }
 
+/**
+ * @brief Second UI Window for taking various input file locations from user
+ */
 class ImageMode : public QDialog
 {
     Q_OBJECT

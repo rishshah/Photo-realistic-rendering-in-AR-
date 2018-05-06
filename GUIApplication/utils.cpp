@@ -1,5 +1,11 @@
 #include "utils.h"
-
+/**
+ * @brief get 3 different numbers between 0 and n
+ * 
+ * @param x output 1st number
+ * @param y output 2nd number
+ * @param z output 3rd number
+ */
 void get3Points(int n,int&x,int&y,int&z){
     x=rand()%n;
     do{
@@ -13,12 +19,21 @@ void get3Points(int n,int&x,int&y,int&z){
     while(z==x ||z==y);
 }
 
+/**
+ * @brief get distance from point to plane  
+ */
 double dist2plane(QVector3D point, QVector3D plane){
     double num = abs(plane.x()*point.x() + plane.y()*point.y() + plane.z()*point.z() - 1);
     double den = sqrt(plane.x()*plane.x() + plane.y()*plane.y() + plane.z()*plane.z());
     return num/den;
 }
 
+/**
+ * @brief Convert cv Matric 4 X 4 to Q Matrix 4 X 4
+ * 
+ * @param x cv Matrix
+ * @return Q Matrix
+ */
 QMatrix4x4 convert2QMat(cv::Mat x){
     QMatrix4x4 out;
     out.setToIdentity();
@@ -26,13 +41,17 @@ QMatrix4x4 convert2QMat(cv::Mat x){
         for(int i=0;i<4;i++){
             out.setRow(i, QVector4D(x.at<float>(i,0), x.at<float>(i,1), x.at<float>(i,2), x.at<float>(i,3)));
         }
-//        printf("YYYYY\n");
-    } else {
-//        printf("XXXXX\n");
     }
     return out;
 }
 
+/**
+ * @brief fit plane to bunch of points and get error in fit
+ * 
+ * @param points vector of input points
+ * @param maybe_model output model plane equation of best fit 
+ * @param error output error of fit
+ */
 void fit_plane(QVector<QVector3D> points, QVector3D& maybe_model, double& error){
     int num_points = points.size();
 
@@ -55,14 +74,37 @@ void fit_plane(QVector<QVector3D> points, QVector3D& maybe_model, double& error)
     }
 }
 
+/**
+ * @brief check if point and plane are close enough
+ * 
+ * @param error_limit distance should be less than this limit
+ * @return true iff close enough point and plane
+ */
 bool close_enough(QVector3D point, QVector3D plane, double error_limit){
     return dist2plane(point, plane) < error_limit;
 }
 
+/**
+ * @brief check whether the fit is good enough
+ * 
+ * @param points points in the fit
+ * @param good_num_points threshold limit 
+ * 
+ * @return true iff number of points > threshold
+ */
 bool good_enough(QVector<QVector3D> points, int good_num_points){
     return points.size() > good_num_points;
 }
 
+/**
+ * @brief check if a point is between corners of mouse drag
+ * 
+ * @param transform world transform of the point
+ * @param point point to be checked
+ * @param c1 corner 1 of mouse drag
+ * @param c2 corner opposite to corner 1 of mouse drag
+ * @return true if point really in the mouse drag window
+ */
 bool between_corners(QMatrix4x4 transform, QVector3D point, QVector3D c1, QVector3D c2){
     QVector4D tp = transform * QVector4D(point, 1.0f);
     QVector3D point3D = QVector3D(tp.x()/tp.z(), tp.y()/tp.z(), tp.y()/tp.z());
@@ -95,6 +137,14 @@ bool between_corners(QMatrix4x4 transform, QVector3D point, QVector3D c1, QVecto
     }
 }
 
+/**
+ * @brief Get the point closest to given point on given plane
+ * 
+ * @param point given point 
+ * @param plane given plane
+ * 
+ * @return point on the plane 
+ */
 QVector3D pointOnPlane(QVector3D point, QVector3D plane){
     float t = (1 - point.x() + point.y() + point.z())/plane.lengthSquared();
     return point + t*plane;
@@ -103,166 +153,15 @@ QVector3D pointOnPlane(QVector3D point, QVector3D plane){
 #include <GLES3/gl3.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <png.h>
 
-GLuint png_texture_load(const char * file_name)
-{
-    // This function was originally written by David Grayson for
-    // https://github.com/DavidEGrayson/ahrs-visualizer
-
-    png_byte header[8];
-
-    FILE *fp = fopen(file_name, "rb");
-    if (fp == 0)
-    {
-        perror(file_name);
-        return 0;
-    }
-
-    // read the header
-    fread(header, 1, 8, fp);
-
-    if (png_sig_cmp(header, 0, 8))
-    {
-        fprintf(stderr, "error: %s is not a PNG.\n", file_name);
-        fclose(fp);
-        return 0;
-    }
-
-    png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png_ptr)
-    {
-        fprintf(stderr, "error: png_create_read_struct returned 0.\n");
-        fclose(fp);
-        return 0;
-    }
-
-    // create png info struct
-    png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr)
-    {
-        fprintf(stderr, "error: png_create_info_struct returned 0.\n");
-        png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-        fclose(fp);
-        return 0;
-    }
-
-    // create png info struct
-    png_infop end_info = png_create_info_struct(png_ptr);
-    if (!end_info)
-    {
-        fprintf(stderr, "error: png_create_info_struct returned 0.\n");
-        png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
-        fclose(fp);
-        return 0;
-    }
-
-    // the code in this if statement gets called if libpng encounters an error
-    if (setjmp(png_jmpbuf(png_ptr))) {
-        fprintf(stderr, "error from libpng\n");
-        png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        fclose(fp);
-        return 0;
-    }
-
-    // init png reading
-    png_init_io(png_ptr, fp);
-
-    // let libpng know you already read the first 8 bytes
-    png_set_sig_bytes(png_ptr, 8);
-
-    // read all the info up to the image data
-    png_read_info(png_ptr, info_ptr);
-
-    // variables to pass to get info
-    int bit_depth, color_type;
-    png_uint_32 temp_width, temp_height;
-
-    // get info about png
-    png_get_IHDR(png_ptr, info_ptr, &temp_width, &temp_height, &bit_depth, &color_type,
-        NULL, NULL, NULL);
-
-//    printf("%s: %lux%lu %d\n", file_name, temp_width, temp_height, color_type);
-
-    if (bit_depth != 8)
-    {
-        fprintf(stderr, "%s: Unsupported bit depth %d.  Must be 8.\n", file_name, bit_depth);
-        return 0;
-    }
-
-    GLint format, internal_format;
-    switch(color_type)
-    {
-    case PNG_COLOR_TYPE_RGB:
-         internal_format = format = GL_RGB;
-        break;
-    case PNG_COLOR_TYPE_RGB_ALPHA:
-        internal_format = format = GL_RGBA;
-        break;
-    case PNG_COLOR_TYPE_GRAY:
-        internal_format = GL_RED;
-        format = GL_RED;
-        break;
-    default:
-        fprintf(stderr, "%s: Unknown libpng color type %d.\n", file_name, color_type);
-        return 0;
-    }
-
-    // Update the png info struct.
-    png_read_update_info(png_ptr, info_ptr);
-
-    // Row size in bytes.
-    int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-
-    // glTexImage2d requires rows to be 4-byte aligned
-    rowbytes += 3 - ((rowbytes-1) % 4);
-
-    // Allocate the image_data as a big block, to be given to opengl
-    png_byte * image_data = (png_byte *)malloc(rowbytes * temp_height * sizeof(png_byte)+15);
-    if (image_data == NULL)
-    {
-        fprintf(stderr, "error: could not allocate memory for PNG image data\n");
-        png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        fclose(fp);
-        return 0;
-    }
-
-    // row_pointers is for pointing to image_data for reading the png with libpng
-    png_byte ** row_pointers = (png_byte **)malloc(temp_height * sizeof(png_byte *));
-    if (row_pointers == NULL)
-    {
-        fprintf(stderr, "error: could not allocate memory for PNG row pointers\n");
-        png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-        free(image_data);
-        fclose(fp);
-        return 0;
-    }
-
-    // set the individual row_pointers to point at the correct offsets of image_data
-    for (unsigned int i = 0; i < temp_height; i++)
-    {
-        row_pointers[temp_height - 1 - i] = image_data + i * rowbytes;
-    }
-
-    // read the png into image_data through row_pointers
-    png_read_image(png_ptr, row_pointers);
-
-    // Generate the OpenGL texture object
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, internal_format, temp_width, temp_height, 0, format, GL_UNSIGNED_BYTE, image_data);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    // clean up
-    png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
-    free(image_data);
-    free(row_pointers);
-    fclose(fp);
-    return texture;
-}
-
+/**
+ * @brief Load texture from cv image matrix
+ * 
+ * @param img cv image matrix
+ * @param grayscale true iff texture needed is grayscale
+ * 
+ * @return texture Glint 
+ */
 GLuint distorted_texture_load(cv::Mat img, bool grayscale){
     GLuint textureTrash;
     cv::flip(img, img, 0);
@@ -280,6 +179,7 @@ GLuint distorted_texture_load(cv::Mat img, bool grayscale){
     if(grayscale){
         format = internal_format = GL_RED;
     } else {
+        cv::cvtColor(img, img, CV_BGR2RGB);
         format = internal_format = GL_RGB;
     }
     glTexImage2D(GL_TEXTURE_2D,     // Type of texture

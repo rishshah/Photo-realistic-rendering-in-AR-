@@ -7,7 +7,9 @@
 namespace Ui {
 class OpenGLWindow;
 }
-
+/**
+ * @brief The main UI window where user performs all interactions with the real world and, creates and views augmentations
+ */
 class OpenGLWindow : public QDialog
 {
     Q_OBJECT

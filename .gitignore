@@ -63,6 +63,6 @@ ORB_SLAM2/*~
 ORB_SLAM2/lib/
 
 #Output files
-KeyFrameTrajectory.txt
 V1_01_easy/*
-abc.txt
+build/*
+

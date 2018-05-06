@@ -69,8 +69,6 @@ QMatrix4x4 convert2QMat(cv::Mat x);
 
 QVector3D pointOnPlane(QVector3D point, QVector3D plane);
 
-GLuint png_texture_load(const char * file_name);
-
 GLuint distorted_texture_load(cv::Mat img, bool grayscale);
 
 GLuint LoadTexture(const char* filename, int width, int height);

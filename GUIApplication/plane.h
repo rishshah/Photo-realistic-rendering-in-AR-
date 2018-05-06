@@ -8,6 +8,9 @@
 #include <QVector>
 #include <QVector3D>
 
+/**
+ * @brief Plane attributes
+ */
 class Plane : protected QOpenGLFunctions
 {
 private:

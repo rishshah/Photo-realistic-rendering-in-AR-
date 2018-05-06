@@ -11,6 +11,9 @@
 #include <QVector>
 #include <QVector3D>
 
+/**
+ * @brief Mesh attributes struct
+ */
 class Mesh : protected QOpenGLFunctions
 {
 private:

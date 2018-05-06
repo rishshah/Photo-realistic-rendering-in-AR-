@@ -2,7 +2,9 @@
 #define CAMERA_H
 
 #include "utils.h"
-
+/**
+ * @brief Intrinsic Opencv camera parameters 
+ */
 class Camera{
     float m_fx, m_fy;
     float m_cx, m_cy;

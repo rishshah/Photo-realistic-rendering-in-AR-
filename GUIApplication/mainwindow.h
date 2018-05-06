@@ -7,6 +7,9 @@ namespace Ui {
 class MainWindow;
 }
 
+/**
+ * @brief Initial UI window for taking input mode and usage mode from user
+ */
 class MainWindow : public QMainWindow
 {
     Q_OBJECT

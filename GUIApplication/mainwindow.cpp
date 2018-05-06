@@ -12,6 +12,9 @@
 #include <cstdlib>
 #include <unistd.h>
 
+/**
+ * @brief Qt Constructor for setting up main window 
+ */
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow){
@@ -25,7 +28,9 @@ MainWindow::~MainWindow(){
 }
 
 
-
+/**
+ * @brief Functionality of "Continue" Button click
+ */
 void MainWindow::on_continue_pushbutton_clicked()
 {
     bool web_cam_mode;
@@ -56,7 +61,9 @@ void MainWindow::on_continue_pushbutton_clicked()
 
 
 
-
+/**
+ * @brief Functionality of Debug button "Direct Images" button click
+ */
 void MainWindow::on_pushButton_clicked()
 {
     hide();
