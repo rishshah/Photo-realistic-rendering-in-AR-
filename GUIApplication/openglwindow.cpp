@@ -143,11 +143,11 @@ void OpenGLWindow::on_pushButton_confirm_clicked()
 void OpenGLWindow::on_pushButton_add_mesh_clicked()
 {
 
-    QString meshFile = QFileDialog::getOpenFileName(this, tr("Choose Mesh Object File"), "", tr("Object (*.obj);; All files (*.*)"));
-    std::string meshFile_str = meshFile.toUtf8().constData();
+//    QString meshFile = QFileDialog::getOpenFileName(this, tr("Choose Mesh Object File"), "", tr("Object (*.obj);; All files (*.*)"));
+//    std::string meshFile_str = meshFile.toUtf8().constData();
     
     // Debug mode fixed mesh file
-    meshFile_str = MESH_FILEPATH;
+    std::string meshFile_str = MESH_FILEPATH;
     
     ui->openGLWidget->input_mesh(meshFile_str);
     ui->pushButton_playback->setVisible(true);

@@ -11,7 +11,7 @@
 #define VOCABULARY BASE_DIR "ORB_SLAM2/Vocabulary/ORBvoc.txt"
 #define CAM_SETTING BASE_DIR "ORB_SLAM2/Examples/Monocular/EuRoC.yaml"
 
-#define OUTPUT_BASE "/home/rishshah/Downloads/Sem6/Study_Material/RnD/build-GUIApplication-Desktop-Debug/"
+#define OUTPUT_BASE BASE_DIR "build/"
 #define SLAM_POINTS_FILEPATH OUTPUT_BASE "abc.txt"
 #define SLAM_POINTS_DESC_FILEPATH OUTPUT_BASE "abc.desc"
 #define SLAM_KFS_FILEPATH OUTPUT_BASE "KeyFrameTrajectory.txt"

@@ -1,104 +1,81 @@
 # Photo-realistic rendering in AR
 
-## Description
-Application which scans the natural environment around user , tracks various planes and features and creates a synthetic map of the environment. User can then provide 3D meshes to display in the scene and play with them.
-The photorealistic rendering part includes 3D mesh rendering in global illumination accounting for various light sources in that natural environment.
+## Overview
+GUI based application that scans the natural environment around user, creates a synthetic map of the environment in form of sparse point cloud. User can then provide 3D meshes to display in the scene and play with them.
 
-## Milestones
+## Major Modules
 
-### Tracking
-- Use SLAM system to recreate the surroundings and get 3d points of location of scene and camera trajectory
+### Preprocessing
+* Use SLAM system to recreate the surroundings and get 3d points of location of scene and camera trajectory
+* Get camera pose each each moment of tracking in SLAM system
 
-### Analysis
-- Save the points in database system in orderly fashion so as to perform fast retrieval and matching in rendering phase
-- Construct approxiamte planes from the 3d points and store them
+### User Interaction 
+* Construct approxiamte planes from the 3d points, add synthetic mesh and store their location for rendering in real time AR
+* Save the feature points in orderly fashion so as to perform fast retrieval and matching in rendering phase
 
-### Real Time Rendering 
-- Render set of good available planes for user to select to place 3d mesh on
-- Get user 3d mesh and render it
-- Combine real time camera feed with the rendered synthetic image and display it to user
-
-### Photorealistic Rendering
-- Real research papers and look for implementation
-
-## Status
-- ORB SLAM library output 3d points obtained
-- Plane fitted to points in the space
-- Getting input -> either attached camera/ video file input
-- Processing file and displaying the progress window from ORBSLAM
-- Displaying processed points
-- Mouse selection tool for choosing a bunch of points
-- Fitting a plane to those points
-- Multiple plane selection
-- Input and render meshes
-- Select(Snap to) plane for removal
-- Display texture
-- Translation in PAN MODE
-- Bringing input mesh to front
-- Rendering input mesh from camera 
-- Plane display nicely (bounded)
-- Resizing feature in input mesh through object file
-- Snap mesh to plane
-- Read settings file
-- Copy the projection matrix
-- Include opencv, convert to/from matrices the images
-- Undistort the image texture
-- Use every frame pose for augemtation
-- GLWidget PLAYBACK -> call continuously TrackMonocular{ inp -> image , output -> points, matrix }
-- Use this info to draw both background and mesh and already present planes
-- store keypoint descriptors and planes.
-- find the matching algorithm 
-- change UI 
-- save web_cam images
-- incorporate binary matching
-- complete webcam part with testing
-- save and load planes and meshes
-- show various keyframes with points for plane selection
-- adjust the initial point texture correlation
-- change the box movement parameters
+### Rendering 
+* Render superposition of saved meshes on the texture background of images that are given as input 
+* Perform matching algorithm to do augmentation in realtime
 
 
-### Immediate goals
-- use webcam intrinsic parameters (ACTUAL CALLIBRATION REMAINING)
-
-- detailed reading of papers
-- finding a viable algorithm
-- UI description easy,  Coming up too
-- Challenges in ORBSLA
-- Coherent work in the end
-- Result photographs and explaination
-- Test whether it works elsewhere
-
-
-### Later Goals
-- one possible error handling in webcam online mode
-- omp parallel for the parallel part (MAYBE - TODAY)
-
-## Plan
-- Some storage of planes (later)
-- Render it and superimpose on the video and playback
-	- Check if their cam images are aligned with the keyframes
-	- Give user an option to align if necessary
-	- Playback using bezier curve interpolation
+## Future Work
+* Parallelize the code for matching algorithm
+* Implement photorealistic part of rendering
+* Some UI changes to make it look more pleasing
 	
 
-#### Overview
-A GUI application for user to visualize augmented reality using script that builds ORBSLAM, processing the output for purpose of mounting a 3d surface on input 2d video for rendering synthetic meshes
+## Usage
+Once you get the application succesfully compiling and running following are the UI instructions to play with the applciation
 
-##### ORB SLAM API 
-	- Work 		(C++ program, using api calls of ORBSLAM and getting output)
-	- Input		(Images in sequences)
-	- Output 	(3D Points of scene)
+### Page 1
+Firstly as soon as app starts you should be seeing a dialog box. Then you have to fill in the input and usage mode before proceeding. The "Direct Images" button is for debug purposes currently.
+After filling up those radio buttons click on "Continue" 
 
-##### QT C++ GUI application that outputs planes from the given points (RANSAC and Regression)
+### Page 2
+Upload the required files reuired for the type of mode selected and press on "Continue" 
 
-##### Mode 1
-- on a video (images/ webcam) if descriptor match -> render plane + mesh
+### Page 3
+What happens after in this page is differnt according to mode selected in Page 1
 
-##### Mode 2
-- capture video (images/ webcam) scan and store descriptors
-- show the map, take input planes, save them 
+#### Offline
+* In Offline mode, SLAM system starts as soon as page 3 is created and ORB-SLAM 2 detects features points and the results are displayed on the screen. After this preprocessing phase, the systems saves the point cloud in "abc.txt" descriptors in "abc.desc" in the build directory.
+* Make sure to save the augmentations created before quitting the application or hitting playback
+* For webcam mode, all the feed seen during the SLAM duration is saved in build/images directory and accordingly a "image-info.csv" in created in the build directory.  
 
+* Then after the prerocessing stage, you can interact through the UI buttons, keyboards keys and mouse motions to do following actions.
+##### Pan Mode
+In pan mode you can look around the scene captured point cloud data with apropriate background texture. 
+
+###### Keyboard Events
+* "WASDZX" Translation in the scene
+* "OP" Traversal along keyframes ```O for previous keyframe and P for next```
+* "Shift" Shift to fine translation steps 
+* "Alt" Shift to big translation steps
+
+###### Mouse Events
+* "Right,Left" Click and Drag -> rotation along 2 global axes in the scene 
+
+##### Select Mode
+In select mode you can select points and planes in the point cloud and do following actions. All the actions are executed when you click the confirm button
+
+###### Add Option
+Select bunch of points and fit a plane to them to add to the scene
+
+###### Remove Option
+Select an already present plane and remove it from the scene
+
+###### Adjust Planes Option
+Given atleast 2 planes in the scene, one can be extended to join the other. Select one point on first plane, then select a point on second plane so that first plane can be extended to meet the second
+
+###### Adjust Mesh Option
+Given a plane and a mesh, first select plane corner, then select mesh point. Now the mesh will be moved to the plane to make those selected points coincide.
+
+###### Mouse Events
+* Selecting a point -> Try to click someplace near that point and drag the mouse to place that point in the rectangular region created by the mouse drag (while keeping mouse button pressed) and when you are sure that the reuired point is in the region release the mouse click
+
+#### Online Mode
+For using online mode, you should make sure you have completed the offline mode all the steps including saving of the augmentations.
+Now meeting above requirements, in online mode, SLAM system starts and receives either the images/ web cam feed and the applciation tries to match the environment currently visible to the one that was saved in preprocessing phase of latest offline mode. As soon as a match is seen, the augmentations appear at required locations (that you placed it in when in interaction mode in previous offline mode). 
 
 
 

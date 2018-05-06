@@ -648,7 +648,6 @@ void MyGLWidget::readKeyFrames(string file) {
     FILE* fp_input = fopen(file.c_str(), "r" );
     if (fp_input ==  NULL) {
         QMessageBox::critical(this, "Error", "resdkeyframes: file corrupt");
-        return;
     } else {
         m_keyframes.clear();
         double t; float x, y, z, q1, q2, q3, q4;
